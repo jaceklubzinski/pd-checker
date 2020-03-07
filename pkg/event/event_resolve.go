@@ -1,7 +1,7 @@
 package event
 
-func (o *manageEvent) resolveEvent() {
-	o.options.event.Action = "resolve"
-	o.options.event.DedupKey = o.response.DedupKey
-
+func (o *ManageEvent) ResolveEvent() {
+	o.Options.Action = "resolve"
+	o.Options.DedupKey = o.Response.DedupKey
+	o.manageIncident()
 }

@@ -1,5 +1,7 @@
 package event
 
-func (o *optionEvent) triggerEvent() {
-	o.options.Action = "trigger"
+func (o *ManageEvent) TriggerEvent() {
+	o.Options.Action = "trigger"
+	o.payLoad()
+	o.manageIncident()
 }

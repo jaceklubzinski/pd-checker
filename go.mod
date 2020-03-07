@@ -4,5 +4,10 @@ go 1.13
 
 require (
 	github.com/PagerDuty/go-pagerduty v1.1.2
+	github.com/avast/retry-go v2.6.0+incompatible
+	github.com/grpc-ecosystem/grpc-gateway v1.14.1 // indirect
+	github.com/mitchellh/go-homedir v1.1.0
+	github.com/spf13/cobra v0.0.6
+	github.com/spf13/viper v1.6.2
 	github.com/urfave/cli/v2 v2.1.1 // indirect
 )

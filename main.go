@@ -1,12 +1,12 @@
 package main
 
-import (
-	"fmt"
-	"os"
-)
+import "github.com/jaceklubzinski/pd-checker/cmd"
+
+// TODO:
+// - retry
+// - prometheus metrics
+// - testy
 
 func main() {
-	integrationKey := os.Getenv("PAGERDUTY_INTEGRATION_KEY")
-
-	fmt.Println(integrationKey)
+	cmd.Execute()
 }
