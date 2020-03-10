@@ -1,7 +1,6 @@
 package event
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -9,8 +8,9 @@ import (
 	"github.com/avast/retry-go"
 )
 
-func (o *ManageEvent) manageIncident() {
-	fmt.Println("create incident")
+func (o *ManageEvent) ManageIncident() error {
+	var delaySecond time.Duration = 5
+	var retryAttempt uint = 5
 	err := retry.Do(
 		func() error {
 			resp, err := pagerduty.ManageEvent(*o.Options)
@@ -18,15 +18,16 @@ func (o *ManageEvent) manageIncident() {
 				return err
 			}
 			o.Response = resp
-			fmt.Println(resp)
+			o.EventMetrics.RecordMetricsEvent(o.Response.Status)
+			log.Println(o.message)
 			return nil
 		},
-		retry.Delay(time.Second*5),
+		retry.Attempts(retryAttempt),
+		retry.Delay(time.Second*delaySecond),
 		retry.OnRetry(func(n uint, err error) {
 			log.Printf("#%d: %s\n", n, err)
+			o.EventMetrics.RecordMetricsEventError(err.Error())
 		}),
 	)
-	if err != nil {
-		panic(err)
-	}
+	return err
 }
