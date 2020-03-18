@@ -8,6 +8,7 @@ import (
 	"github.com/avast/retry-go"
 )
 
+//ManageIncident create or resolve incident
 func (o *ManageEvent) ManageIncident() error {
 	var delaySecond time.Duration = 5
 	var retryAttempt uint = 5

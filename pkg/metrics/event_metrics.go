@@ -6,10 +6,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+//RecordMetricsEvent prometheus counter for event
 type RecordMetricsEvent struct {
 	Event *prometheus.CounterVec
 }
 
+//NewRecordMetricsEvent constructor function for new metrics
 func (e *RecordMetricsEvent) NewRecordMetricsEvent() {
 	e.Event = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -21,6 +23,7 @@ func (e *RecordMetricsEvent) NewRecordMetricsEvent() {
 	prometheus.MustRegister(e.Event)
 }
 
+//RecordMetricsEventError prometheus error metrics
 func (e *RecordMetricsEvent) RecordMetricsEventError(toParse string) {
 	r, _ := regexp.Compile("HTTP Status Code: ([0-9]+), Message")
 	match := r.FindStringSubmatch(toParse)[1]
@@ -35,6 +38,7 @@ func (e *RecordMetricsEvent) RecordMetricsEventError(toParse string) {
 	}
 }
 
+//RecordMetricsEvent prometheus success metric
 func (e *RecordMetricsEvent) RecordMetricsEvent(toParse string) {
 	match, _ := regexp.MatchString("success", toParse)
 	if match {

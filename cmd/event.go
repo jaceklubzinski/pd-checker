@@ -1,9 +1,8 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // eventCmd represents the event command
@@ -17,10 +16,12 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("event called")
+		cmd.Help()
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(eventCmd)
+	viper.BindEnv("pagerduty_integration_key")
+	eventCmd.Flags().StringP("integration-key", "i", viper.GetString("PAGERDUTY_INTEGRATION_KEY"), "Integration key for PagerDuty event api (env PAGERDUTY_INTEGRATION_KEY)")
 }

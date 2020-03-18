@@ -2,44 +2,47 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/jaceklubzinski/pd-checker/pkg/event"
 	"github.com/jaceklubzinski/pd-checker/pkg/metrics"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // serverCmd represents the server command
 var serverCmd = &cobra.Command{
 	Use:   "server",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Trigger and resolve alerts in deamon mode",
+	Long: `Server mode trigger and resolve alerts in repetable mode.
+Metrics are available on url 127.0.0.1:2112/metrics`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("server called")
 		var opts pagerduty.V2Event
-		integrationKey := os.Getenv("PAGERDUTY_INTEGRATION_KEY")
+		integrationKey := viper.GetString("pagerduty_integration_key")
+		triggerEvery, _ := cmd.Flags().GetDuration("repeat")
 		opts.RoutingKey = integrationKey
-		client := &event.ManageEvent{Options: &opts}
-		client.EventMetrics.NewRecordMetricsEvent()
-		//go base.RepeatFunction(client.TriggerEvent())
-		client.TriggerEvent()
+		clientEvent := event.NewEvent(&opts)
+		clientEvent.EventMetrics.NewRecordMetricsEvent()
+		clientEvent.PayLoad(triggerEvery.String())
 		go func() {
-			ticker := time.NewTicker(60 * time.Second)
+			ticker := time.NewTicker(triggerEvery)
 			for ; true; <-ticker.C {
-				_ = client.ManageIncident()
+				clientEvent.TriggerEvent()
+				err := clientEvent.ManageIncident()
+				if err == nil {
+					clientEvent.ResolveEvent()
+					_ = clientEvent.ManageIncident()
+				}
 			}
 		}()
-		metrics.MetricsServer()
+		metrics.Server()
 	},
 }
 
 func init() {
 	eventCmd.AddCommand(serverCmd)
+	defaultRepeat := 60 * time.Second
+	serverCmd.Flags().DurationP("repeat", "r", defaultRepeat, "Trigger new alert every duration minutes")
 }

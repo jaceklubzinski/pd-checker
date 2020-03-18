@@ -2,30 +2,26 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/jaceklubzinski/pd-checker/pkg/event"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // triggerCmd represents the trigger command
 var triggerCmd = &cobra.Command{
 	Use:   "trigger",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Trigger and instantly resolve single alert",
+	Long:  `Trigger and instantly resolve single alert`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("trigger called")
 		var opts pagerduty.V2Event
-		integrationKey := os.Getenv("PAGERDUTY_INTEGRATION_KEY")
+		integrationKey := viper.GetString("pagerduty_integration_key")
 		opts.RoutingKey = integrationKey
-		client := &event.ManageEvent{Options: &opts}
+		client := event.NewEvent(&opts)
 		client.EventMetrics.NewRecordMetricsEvent()
+		client.PayLoad("")
 		client.TriggerEvent()
 		err := client.ManageIncident()
 		if err == nil {
