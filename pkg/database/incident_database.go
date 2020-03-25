@@ -7,51 +7,60 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-//Incident structure for incidents stored in database
-type Incident struct {
-	id       string
-	title    string
-	service  string
-	createAt string
-	timer    string
+//IncidentDb structure for incidents stored in database
+type IncidentDb struct {
+	Id       string
+	Title    string
+	Service  string
+	CreateAt string
+	Timer    string
+	Alert    string
+	Tocheck  string
 }
 
-//IncidentRegister register for incidents
-type IncidentRegister struct {
-	Incidents []Incident
-}
-
-//IncidentRepository
+//IncidentRepository interface
 type IncidentRepository interface {
 	SaveIncident(incident *pagerduty.Incident, incidentTimer interface{})
+	GetIncident() (inc []*IncidentDb)
 }
 
 //SaveIncident insert incident to database
-func (d *store) SaveIncident(incident *pagerduty.Incident, incidentTimer interface{}) {
+func (d *Store) SaveIncident(incident *pagerduty.Incident, incidentTimer interface{}) {
 	title := incident.Title
 	id := incident.IncidentNumber
 	service := incident.Service.ID
 	createAt := incident.CreatedAt
-	stmt, err := d.db.Prepare("REPLACE INTO incidents values(?,?,?,?,?)")
+	stmt, err := d.db.Prepare("REPLACE INTO incidents values(?,?,?,?,?,?,?)")
 	base.CheckErr(err)
-	_, err = stmt.Exec(id, title, service, createAt, incidentTimer)
+	_, err = stmt.Exec(id, title, service, createAt, incidentTimer, "N", "N")
 	base.CheckErr(err)
 }
 
-func (d *store) GetIncident() (incidents IncidentRegister) {
-	var inc Incident
+func (d *Store) GetIncident() (inc []*IncidentDb) {
+	var incTmp IncidentDb
 	r, err := d.db.Query("select * from incidents")
 	base.CheckErr(err)
 	for r.Next() {
-		err := r.Scan(&inc.id, &inc.title, &inc.service, &inc.createAt, &inc.timer)
+		err := r.Scan(&incTmp.Id, &incTmp.Title, &incTmp.Service, &incTmp.CreateAt, &incTmp.Timer, &incTmp.Alert, &incTmp.Tocheck)
 		base.CheckErr(err)
-		incidents.Incidents = append(incidents.Incidents, inc)
+		inc = append(inc, &incTmp)
 	}
 	return
 }
 
 //InitIncidentRepository create schema
-func (d *store) InitIncidentRepository() {
-	_, err := d.db.Exec("create table if not exists incidents (id text NOT NULL,title text NOT NULL, service text NOT NULL UNIQUE, createat text NOT NULL, timer text)")
+func (d *Store) InitIncidentRepository() {
+	sql_table := `
+	CREATE TABLE IF NOT EXISTS incidents(
+		id TEXT NOT NULL,
+		title TEXT NOT NULL,
+		service TEXT NOT NULL UNIQUE,
+		createat TEXT NOT NULL,
+		timer TEXT NOT NULL,
+		alert TEXT DEFAULT "N",
+		tocheck TEXT DEFAULT "N"
+	);
+	`
+	_, err := d.db.Exec(sql_table)
 	base.CheckErr(err)
 }

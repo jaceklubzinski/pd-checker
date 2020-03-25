@@ -16,3 +16,10 @@ func CheckErr(err error) {
 		panic(err)
 	}
 }
+
+func StringToDate(value string) time.Time {
+	layoutISO := "2006-01-02 15:04:05"
+	converted, err := time.Parse(layoutISO, value)
+	CheckErr(err)
+	return converted
+}

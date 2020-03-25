@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/PagerDuty/go-pagerduty"
@@ -12,7 +13,7 @@ import (
 )
 
 // serverCmd represents the server command
-var serverCmd = &cobra.Command{
+var eventServerCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Trigger and resolve alerts in deamon mode",
 	Long: `Server mode trigger and resolve alerts in repetable mode.
@@ -26,6 +27,7 @@ Metrics are available on url 127.0.0.1:2112/metrics`,
 		clientEvent := event.NewEvent(&opts)
 		clientEvent.EventMetrics.NewRecordMetricsEvent()
 		clientEvent.PayLoad(triggerEvery.String())
+		log.Println("New event will be triggered every: ", triggerEvery)
 		go func() {
 			ticker := time.NewTicker(triggerEvery)
 			for ; true; <-ticker.C {
@@ -42,7 +44,7 @@ Metrics are available on url 127.0.0.1:2112/metrics`,
 }
 
 func init() {
-	eventCmd.AddCommand(serverCmd)
+	eventCmd.AddCommand(eventServerCmd)
 	defaultRepeat := 60 * time.Second
-	serverCmd.Flags().DurationP("repeat", "r", defaultRepeat, "Trigger new alert every duration minutes")
+	eventServerCmd.Flags().DurationP("repeat", "r", defaultRepeat, "Trigger new alert every duration minutes")
 }
