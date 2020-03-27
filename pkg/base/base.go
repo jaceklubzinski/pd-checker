@@ -18,8 +18,19 @@ func CheckErr(err error) {
 }
 
 func StringToDate(value string) time.Time {
-	layoutISO := "2006-01-02 15:04:05"
+	layoutISO := "2006-01-02T15:04:05Z"
 	converted, err := time.Parse(layoutISO, value)
 	CheckErr(err)
 	return converted
+}
+
+func LastTillNowDuration(start string) time.Duration {
+	return time.Now().Sub(StringToDate(start))
+}
+
+func NewStartDate(start string, timer string) string {
+	startDate := StringToDate(start)
+	timerDuration, err := time.ParseDuration(timer)
+	CheckErr(err)
+	return startDate.Add(timerDuration).String()
 }

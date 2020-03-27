@@ -43,15 +43,24 @@ to quickly create a Cobra application.`,
 		incidents.IncidentOptions()
 		for _, s := range service.Services {
 			incidents.Options.ServiceIDs = []string{s.APIObject.ID}
-			incidents.CountIncidentService()
-			incidents.CounterInfo()
+			incidents.WriteToDBIncidentService()
 		}
 		//server := incident.NewServer(&incidents, repository)
 		ticker := time.NewTicker(triggerEvery)
+		fmt.Println("Repeat check every", ticker)
 		for ; true; <-ticker.C {
 			incidents.Incidents = repository.GetIncident()
 			for _, v := range incidents.Incidents {
-				fmt.Println(v.Service)
+				fmt.Println(v)
+			}
+			incidents.MarkToCheck()
+			incidents.CheckToAlert()
+			for _, v := range incidents.Incidents {
+				fmt.Println(v)
+			}
+			incidents.Alert()
+			for _, v := range incidents.Incidents {
+				fmt.Println(v)
 			}
 		}
 

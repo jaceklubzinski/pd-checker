@@ -21,7 +21,7 @@ var triggerCmd = &cobra.Command{
 		opts.RoutingKey = integrationKey
 		client := event.NewEvent(&opts)
 		client.EventMetrics.NewRecordMetricsEvent()
-		client.PayLoad("")
+		client.PayLoad("24h")
 		client.TriggerEvent()
 		err := client.ManageIncident()
 		if err == nil {
