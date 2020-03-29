@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/PagerDuty/go-pagerduty"
@@ -33,35 +34,26 @@ to quickly create a Cobra application.`,
 		config := config.NewConfig("", databasePath)
 		db, err := database.ConnectDatabase(config)
 		base.CheckErr(err)
-		repository := database.NewIncidentRepository(db)
-		repository.InitIncidentRepository()
+		DbRepository := database.NewIncidentRepository(db)
+		DbRepository.InitIncidentRepository()
 		pdclient := pagerduty.NewClient(getFlagAuthToken())
 		conn := client.NewApiClient(pdclient)
+		incidents := incident.IncidentService{IncidentClient: conn, DbRepository: DbRepository}
+		incidents.IncidentOptions()
 		serviceClient := services.Services{Service: conn}
 		service := serviceClient.Service.ListServices()
-		incidents := incident.IncidentService{IncidentClient: conn, Repository: repository}
-		incidents.IncidentOptions()
 		for _, s := range service.Services {
 			incidents.Options.ServiceIDs = []string{s.APIObject.ID}
 			incidents.WriteToDBIncidentService()
 		}
 		//server := incident.NewServer(&incidents, repository)
 		ticker := time.NewTicker(triggerEvery)
-		fmt.Println("Repeat check every", ticker)
 		for ; true; <-ticker.C {
-			incidents.Incidents = repository.GetIncident()
-			for _, v := range incidents.Incidents {
-				fmt.Println(v)
-			}
+			incidents.Incidents = DbRepository.GetIncident()
 			incidents.MarkToCheck()
 			incidents.CheckToAlert()
-			for _, v := range incidents.Incidents {
-				fmt.Println(v)
-			}
 			incidents.Alert()
-			for _, v := range incidents.Incidents {
-				fmt.Println(v)
-			}
+			log.Printf("Waitig for %s to next check", triggerEvery)
 		}
 
 	},

@@ -37,7 +37,7 @@ to quickly create a Cobra application.`,
 		conn := client.NewApiClient(pdclient)
 		serviceClient := services.Services{Service: conn}
 		service := serviceClient.Service.ListServices()
-		incident := incident.IncidentService{IncidentClient: conn, Repository: repository}
+		incident := incident.IncidentService{IncidentClient: conn, DbRepository: repository}
 		incident.IncidentOptions()
 		for _, s := range service.Services {
 			incident.Options.ServiceIDs = []string{s.APIObject.ID}

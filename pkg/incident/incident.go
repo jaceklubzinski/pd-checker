@@ -1,7 +1,7 @@
 package incident
 
 import (
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/PagerDuty/go-pagerduty"
@@ -14,7 +14,7 @@ import (
 type IncidentService struct {
 	IncidentClient client.IncidentClient
 	Options        pagerduty.ListIncidentsOptions
-	Repository     database.IncidentRepository
+	DbRepository   database.IncidentRepository
 	repeatTimer    interface{}
 	Incidents      []*database.IncidentDb
 	Incident       *database.IncidentDb
@@ -34,60 +34,61 @@ func (i *IncidentService) WriteToDBIncidentService() {
 	for _, p := range registry.Incidents {
 		if p.Title == "PD CHECKER - OK" {
 			i.repeatTimer = i.IncidentClient.AlertDetail(p.Id)
-			i.Repository.SaveIncident(&p, i.repeatTimer)
+			i.DbRepository.SaveIncident(&p, i.repeatTimer)
 		}
 	}
 }
 
 //MarkToCheck check if service incident should be considered again base on last creation time and duraiton
 func (i *IncidentService) MarkToCheck() {
-	fmt.Println("Mark")
 	for _, incident := range i.Incidents {
 		serviceTimer, err := time.ParseDuration(incident.Timer)
 		base.CheckErr(err)
 		lastTillNow := base.LastTillNowDuration(incident.CreateAt)
 		if lastTillNow > serviceTimer {
 			incident.Tocheck = "Y"
-			fmt.Println("to check")
+			log.Printf("For service %s (%s) last alert was created at %s  - checking for new alert", incident.ServiceName, incident.Service, incident.CreateAt)
+		} else {
+			log.Printf("Service %s (%s) has working PagerDuty integration and created checker incident", incident.ServiceName, incident.Service)
 		}
 	}
-	fmt.Println("End Mark")
 }
 
 //CheckToAlert check if service incident was created
 func (i *IncidentService) CheckToAlert() {
-	count := 0
-	fmt.Println("Check")
 	for _, incident := range i.Incidents {
-		fmt.Println("tocheck: ", incident.Tocheck)
 		if incident.Tocheck == "Y" {
 			i.Options.ServiceIDs = []string{incident.Service}
-			i.Options.Since = base.NewStartDate(incident.CreateAt, incident.Timer)
+			i.Options.Since = base.AddDurationToDate(incident.CreateAt, incident.Timer)
+			i.Options.Until = base.DateNow()
 			registry := i.IncidentClient.ListIncidents(i.Options)
 			for _, p := range registry.Incidents {
 				if p.Title == "PD CHECKER - OK" {
-					count++
 					i.repeatTimer = i.IncidentClient.AlertDetail(p.Id)
-					i.Repository.SaveIncident(&p, i.repeatTimer)
+					incident.Tocheck = "N"
+					incident.Trigger = "N"
+					incident.Alert = "N"
+					i.DbRepository.UpdateIncident(&p, i.repeatTimer)
+					log.Printf("New incident for service %s (%s) registered %d", incident.ServiceName, incident.Service, p.IncidentNumber)
 				}
 			}
-		}
-		if count == 0 && incident.Trigger == "N" && incident.Tocheck == "Y" {
-			incident.Alert = "Y"
-			incident.Tocheck = "N"
-			fmt.Println("To alert")
+			if incident.Tocheck == "Y" && incident.Trigger == "N" {
+				incident.Alert = "Y"
+				log.Printf("New alert will be created for service %s (%s)", incident.ServiceName, incident.Service)
+			} else if incident.Tocheck == "Y" && incident.Trigger == "Y" {
+				log.Printf("Alert for service %s (%s) already created", incident.ServiceName, incident.Service)
+			}
 		}
 	}
-	fmt.Println("End Check")
 }
 
 func (i *IncidentService) Alert() {
 	for _, incident := range i.Incidents {
 		if incident.Alert == "Y" && incident.Trigger == "N" {
-			fmt.Println("Trigger alert for service ", incident.Service)
+			log.Printf("Trigger alert for service %s (%s)", incident.ServiceName, incident.Service)
 			incident.Trigger = "Y"
 			incident.Alert = "N"
 		}
-		i.Repository.UpdateIncident(incident)
+		i.DbRepository.UpdateIncidentState(incident)
 	}
 }

@@ -1,6 +1,8 @@
 package base
 
-import "time"
+import (
+	"time"
+)
 
 //RepeatFunction repeat given function every n seconds
 func RepeatFunction(a func()) {
@@ -28,9 +30,13 @@ func LastTillNowDuration(start string) time.Duration {
 	return time.Now().Sub(StringToDate(start))
 }
 
-func NewStartDate(start string, timer string) string {
+func AddDurationToDate(start string, timer string) string {
 	startDate := StringToDate(start)
 	timerDuration, err := time.ParseDuration(timer)
 	CheckErr(err)
 	return startDate.Add(timerDuration).String()
+}
+
+func DateNow() string {
+	return time.Now().UTC().String()
 }

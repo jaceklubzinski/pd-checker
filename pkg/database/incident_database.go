@@ -9,21 +9,36 @@ import (
 
 //IncidentDb structure for incidents stored in database
 type IncidentDb struct {
-	Id       string
-	Title    string
-	Service  string
-	CreateAt string
-	Timer    string
-	Alert    string
-	Tocheck  string
-	Trigger  string
+	Id          string
+	Title       string
+	Service     string
+	ServiceName string
+	CreateAt    string
+	Timer       string
+	Alert       string
+	Tocheck     string
+	Trigger     string
 }
 
 //IncidentRepository interface
 type IncidentRepository interface {
+	UpdateIncident(incident *pagerduty.Incident, incidentTimer interface{})
 	SaveIncident(incident *pagerduty.Incident, incidentTimer interface{})
 	GetIncident() (inc []*IncidentDb)
-	UpdateIncident(incident *IncidentDb)
+	UpdateIncidentState(incident *IncidentDb)
+}
+
+//UpdateIncident insert incident to database
+func (d *Store) UpdateIncident(incident *pagerduty.Incident, incidentTimer interface{}) {
+	title := incident.Title
+	id := incident.IncidentNumber
+	service := incident.Service.ID
+	serviceName := incident.Service.Summary
+	createAt := incident.CreatedAt
+	stmt, err := d.db.Prepare("Update incidents set id = ?,title = ?,createat = ?,timer = ?, servicename = ? where service = ?")
+	base.CheckErr(err)
+	_, err = stmt.Exec(id, title, createAt, incidentTimer, serviceName, service)
+	base.CheckErr(err)
 }
 
 //SaveIncident insert incident to database
@@ -31,15 +46,16 @@ func (d *Store) SaveIncident(incident *pagerduty.Incident, incidentTimer interfa
 	title := incident.Title
 	id := incident.IncidentNumber
 	service := incident.Service.ID
+	serviceName := incident.Service.Summary
 	createAt := incident.CreatedAt
-	stmt, err := d.db.Prepare("REPLACE INTO incidents values(?,?,?,?,?,?,?,?)")
+	stmt, err := d.db.Prepare("REPLACE INTO incidents(id,title,createat,timer,service,servicename) values(?,?,?,?,?,?)")
 	base.CheckErr(err)
-	_, err = stmt.Exec(id, title, service, createAt, incidentTimer, "N", "N", "N")
+	_, err = stmt.Exec(id, title, createAt, incidentTimer, service, serviceName)
 	base.CheckErr(err)
 }
 
-//SaveIncident insert incident to database
-func (d *Store) UpdateIncident(incident *IncidentDb) {
+//UpdateIncidentState insert incident to database
+func (d *Store) UpdateIncidentState(incident *IncidentDb) {
 	alert := incident.Alert
 	tocheck := incident.Tocheck
 	trigger := incident.Trigger
@@ -55,7 +71,7 @@ func (d *Store) GetIncident() (inc []*IncidentDb) {
 	r, err := d.db.Query("select * from incidents")
 	base.CheckErr(err)
 	for r.Next() {
-		err := r.Scan(&incTmp.Id, &incTmp.Title, &incTmp.Service, &incTmp.CreateAt, &incTmp.Timer, &incTmp.Alert, &incTmp.Tocheck, &incTmp.Trigger)
+		err := r.Scan(&incTmp.Id, &incTmp.Title, &incTmp.Service, &incTmp.ServiceName, &incTmp.CreateAt, &incTmp.Timer, &incTmp.Alert, &incTmp.Tocheck, &incTmp.Trigger)
 		base.CheckErr(err)
 		inc = append(inc, &incTmp)
 	}
@@ -64,11 +80,30 @@ func (d *Store) GetIncident() (inc []*IncidentDb) {
 
 //InitIncidentRepository create schema
 func (d *Store) InitIncidentRepository() {
-	sql_table := `
+	incidentTable := `
 	CREATE TABLE IF NOT EXISTS incidents(
 		id TEXT NOT NULL,
 		title TEXT NOT NULL,
 		service TEXT NOT NULL UNIQUE,
+		servicename TEXT NOT NULL,
+		createat TEXT NOT NULL,
+		timer TEXT NOT NULL,
+		alert TEXT DEFAULT "N",
+		tocheck TEXT DEFAULT "N",
+		trigger TEXT DEFAULT "N"
+
+	);
+	`
+
+}
+
+func (d *Store) createTable(sqlTable string) {
+	sqlTable := `
+	CREATE TABLE IF NOT EXISTS incidents(
+		id TEXT NOT NULL,
+		title TEXT NOT NULL,
+		service TEXT NOT NULL UNIQUE,
+		servicename TEXT NOT NULL,
 		createat TEXT NOT NULL,
 		timer TEXT NOT NULL,
 		alert TEXT DEFAULT "N",
