@@ -41,7 +41,7 @@ to quickly create a Cobra application.`,
 		incident.IncidentOptions()
 		for _, s := range service.Services {
 			incident.Options.ServiceIDs = []string{s.APIObject.ID}
-			incident.WriteToDBIncidentService()
+			incident.CheckServiceIncident()
 		}
 	},
 }

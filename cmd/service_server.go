@@ -41,15 +41,16 @@ to quickly create a Cobra application.`,
 		incidents := incident.IncidentService{IncidentClient: conn, DbRepository: DbRepository}
 		incidents.IncidentOptions()
 		serviceClient := services.Services{Service: conn}
-		service := serviceClient.Service.ListServices()
-		for _, s := range service.Services {
-			incidents.Options.ServiceIDs = []string{s.APIObject.ID}
-			incidents.WriteToDBIncidentService()
-		}
 		//server := incident.NewServer(&incidents, repository)
 		ticker := time.NewTicker(triggerEvery)
 		for ; true; <-ticker.C {
+			service := serviceClient.Service.ListServices()
+			for _, s := range service.Services {
+				DbRepository.SaveService(&s)
+			}
+			incidents.Services = DbRepository.GetService()
 			incidents.Incidents = DbRepository.GetIncident()
+			incidents.CheckServiceIncident()
 			incidents.MarkToCheck()
 			incidents.CheckToAlert()
 			incidents.Alert()

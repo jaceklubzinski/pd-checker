@@ -18,6 +18,7 @@ type IncidentService struct {
 	repeatTimer    interface{}
 	Incidents      []*database.IncidentDb
 	Incident       *database.IncidentDb
+	Services       []*database.ServiceDB
 }
 
 //IncidentOptions set options to get incidents
@@ -28,13 +29,17 @@ func (i *IncidentService) IncidentOptions() {
 	i.Options.SortBy = "created_at:asc"
 }
 
-//WriteToDBIncidentService count incidents for service
-func (i *IncidentService) WriteToDBIncidentService() {
-	registry := i.IncidentClient.ListIncidents(i.Options)
-	for _, p := range registry.Incidents {
-		if p.Title == "PD CHECKER - OK" {
-			i.repeatTimer = i.IncidentClient.AlertDetail(p.Id)
-			i.DbRepository.SaveIncident(&p, i.repeatTimer)
+//CheckServiceIncident count incidents for service
+func (i *IncidentService) CheckServiceIncident() {
+	for _, service := range i.Services {
+		i.Options.ServiceIDs = []string{service.ID}
+		registry := i.IncidentClient.ListIncidents(i.Options)
+		for _, incident := range registry.Incidents {
+			if incident.Title == "PD CHECKER - OK" {
+				i.repeatTimer = i.IncidentClient.AlertDetail(incident.Id)
+				i.DbRepository.SaveIncident(&incident, i.repeatTimer)
+				log.Printf("New incident for service %s (%s) registered %d", incident.Service.Summary, incident.Service.ID, incident.IncidentNumber)
+			}
 		}
 	}
 }
@@ -46,10 +51,10 @@ func (i *IncidentService) MarkToCheck() {
 		base.CheckErr(err)
 		lastTillNow := base.LastTillNowDuration(incident.CreateAt)
 		if lastTillNow > serviceTimer {
-			incident.Tocheck = "Y"
-			log.Printf("For service %s (%s) last alert was created at %s  - checking for new alert", incident.ServiceName, incident.Service, incident.CreateAt)
+			incident.ToCheck = "Y"
+			log.Printf("For service %s (%s) last alert was created at %s  - checking for new alert", incident.ServiceName, incident.ServiceID, incident.CreateAt)
 		} else {
-			log.Printf("Service %s (%s) has working PagerDuty integration and created checker incident", incident.ServiceName, incident.Service)
+			log.Printf("Service %s (%s) has working PagerDuty integration", incident.ServiceName, incident.ServiceID)
 		}
 	}
 }
@@ -57,26 +62,26 @@ func (i *IncidentService) MarkToCheck() {
 //CheckToAlert check if service incident was created
 func (i *IncidentService) CheckToAlert() {
 	for _, incident := range i.Incidents {
-		if incident.Tocheck == "Y" {
-			i.Options.ServiceIDs = []string{incident.Service}
+		if incident.ToCheck == "Y" {
+			i.Options.ServiceIDs = []string{incident.ServiceID}
 			i.Options.Since = base.AddDurationToDate(incident.CreateAt, incident.Timer)
 			i.Options.Until = base.DateNow()
 			registry := i.IncidentClient.ListIncidents(i.Options)
 			for _, p := range registry.Incidents {
 				if p.Title == "PD CHECKER - OK" {
 					i.repeatTimer = i.IncidentClient.AlertDetail(p.Id)
-					incident.Tocheck = "N"
+					incident.ToCheck = "N"
 					incident.Trigger = "N"
 					incident.Alert = "N"
 					i.DbRepository.UpdateIncident(&p, i.repeatTimer)
-					log.Printf("New incident for service %s (%s) registered %d", incident.ServiceName, incident.Service, p.IncidentNumber)
+					log.Printf("New incident for service %s (%s) registered #%d", incident.ServiceName, incident.ServiceID, p.IncidentNumber)
 				}
 			}
-			if incident.Tocheck == "Y" && incident.Trigger == "N" {
+			if incident.ToCheck == "Y" && incident.Trigger == "N" {
 				incident.Alert = "Y"
-				log.Printf("New alert will be created for service %s (%s)", incident.ServiceName, incident.Service)
-			} else if incident.Tocheck == "Y" && incident.Trigger == "Y" {
-				log.Printf("Alert for service %s (%s) already created", incident.ServiceName, incident.Service)
+				log.Printf("New alert will be created for service %s (%s)", incident.ServiceName, incident.ServiceID)
+			} else if incident.ToCheck == "Y" && incident.Trigger == "Y" {
+				log.Printf("Alert for service %s (%s) already created", incident.ServiceName, incident.ServiceID)
 			}
 		}
 	}
@@ -85,7 +90,7 @@ func (i *IncidentService) CheckToAlert() {
 func (i *IncidentService) Alert() {
 	for _, incident := range i.Incidents {
 		if incident.Alert == "Y" && incident.Trigger == "N" {
-			log.Printf("Trigger alert for service %s (%s)", incident.ServiceName, incident.Service)
+			log.Printf("Trigger alert for service %s (%s)", incident.ServiceName, incident.ServiceID)
 			incident.Trigger = "Y"
 			incident.Alert = "N"
 		}
