@@ -28,7 +28,7 @@ type IncidentRepository interface {
 	UpdateIncidentState(incident *IncidentDb)
 }
 
-//UpdateIncident insert incident to database
+//UpdateIncident update incident creation time and timer base on service id
 func (d *Store) UpdateIncident(incident *pagerduty.Incident, incidentTimer interface{}) {
 	title := incident.Title
 	id := incident.IncidentNumber
@@ -52,7 +52,7 @@ func (d *Store) SaveIncident(incident *pagerduty.Incident, incidentTimer interfa
 	base.CheckErr(err)
 }
 
-//UpdateIncidentState insert incident to database
+//UpdateIncidentState update incident state to database
 func (d *Store) UpdateIncidentState(incident *IncidentDb) {
 	alert := incident.Alert
 	tocheck := incident.ToCheck
@@ -64,6 +64,7 @@ func (d *Store) UpdateIncidentState(incident *IncidentDb) {
 	base.CheckErr(err)
 }
 
+//GetIncident get all arleady triggered incidents
 func (d *Store) GetIncident() (inc []*IncidentDb) {
 	var tmp string
 	r, err := d.db.Query("select * from incidents inner join services on (incidents.serviceid=services.id);")

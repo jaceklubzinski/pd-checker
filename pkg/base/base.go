@@ -19,6 +19,7 @@ func CheckErr(err error) {
 	}
 }
 
+//StringToDate convert string to date in specific format
 func StringToDate(value string) time.Time {
 	layoutISO := "2006-01-02T15:04:05Z"
 	converted, err := time.Parse(layoutISO, value)
@@ -26,10 +27,12 @@ func StringToDate(value string) time.Time {
 	return converted
 }
 
+//LastTillNowDuration duration from start to now
 func LastTillNowDuration(start string) time.Duration {
 	return time.Now().Sub(StringToDate(start))
 }
 
+//AddDurationToDate add duration to start date
 func AddDurationToDate(start string, timer string) string {
 	startDate := StringToDate(start)
 	timerDuration, err := time.ParseDuration(timer)
@@ -37,6 +40,7 @@ func AddDurationToDate(start string, timer string) string {
 	return startDate.Add(timerDuration).String()
 }
 
+//DateNow return current UTC date
 func DateNow() string {
 	return time.Now().UTC().String()
 }

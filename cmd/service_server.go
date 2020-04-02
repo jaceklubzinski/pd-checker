@@ -41,7 +41,6 @@ to quickly create a Cobra application.`,
 		incidents := incident.IncidentService{IncidentClient: conn, DbRepository: DbRepository}
 		incidents.IncidentOptions()
 		serviceClient := services.Services{Service: conn}
-		//server := incident.NewServer(&incidents, repository)
 		ticker := time.NewTicker(triggerEvery)
 		for ; true; <-ticker.C {
 			service := serviceClient.Service.ListServices()
