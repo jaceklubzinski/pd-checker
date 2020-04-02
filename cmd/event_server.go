@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/jaceklubzinski/pd-checker/pkg/event"
 	"github.com/jaceklubzinski/pd-checker/pkg/metrics"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -27,7 +27,7 @@ Metrics are available on url 127.0.0.1:2112/metrics`,
 		clientEvent := event.NewEvent(&opts)
 		clientEvent.EventMetrics.NewRecordMetricsEvent()
 		clientEvent.PayLoad(triggerEvery.String())
-		log.Println("New event will be triggered every: ", triggerEvery)
+		log.Info("New event will be triggered every: ", triggerEvery)
 		go func() {
 			ticker := time.NewTicker(triggerEvery)
 			for ; true; <-ticker.C {

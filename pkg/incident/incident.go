@@ -1,13 +1,13 @@
 package incident
 
 import (
-	"log"
 	"time"
 
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/jaceklubzinski/pd-checker/pkg/base"
 	"github.com/jaceklubzinski/pd-checker/pkg/client"
 	"github.com/jaceklubzinski/pd-checker/pkg/database"
+	log "github.com/sirupsen/logrus"
 )
 
 //IncidentService struct to manage incidents
@@ -38,7 +38,11 @@ func (i *IncidentService) CheckServiceIncident() {
 			if incident.Title == "PD CHECKER - OK" {
 				i.repeatTimer = i.IncidentClient.AlertDetail(incident.Id)
 				i.DbRepository.SaveIncident(&incident, i.repeatTimer)
-				log.Printf("New incident for service %s (%s) registered %d", incident.Service.Summary, incident.Service.ID, incident.IncidentNumber)
+				log.WithFields(log.Fields{
+					"ServiceName":    incident.ServiceName,
+					"ServiceID":      incident.ServiceID,
+					"IncidentNumber": p.IncidentNumber,
+				}).Info("New incident for service registered")
 			}
 		}
 	}
@@ -52,9 +56,16 @@ func (i *IncidentService) MarkToCheck() {
 		lastTillNow := base.LastTillNowDuration(incident.CreateAt)
 		if lastTillNow > serviceTimer {
 			incident.ToCheck = "Y"
-			log.Printf("For service %s (%s) last alert was created at %s  - checking for new alert", incident.ServiceName, incident.ServiceID, incident.CreateAt)
+			log.WithFields(log.Fields{
+				"ServiceName":  incident.ServiceName,
+				"ServiceID":    incident.ServiceID,
+				"LastCreateAt": incident.CreateAt,
+			}).Info("Checking for new alert")
 		} else {
-			log.Printf("Service %s (%s) has working PagerDuty integration", incident.ServiceName, incident.ServiceID)
+			log.WithFields(log.Fields{
+				"ServiceName": incident.ServiceName,
+				"ServiceID":   incident.ServiceID,
+			}).Info("Service has working PagerDuty integration")
 		}
 	}
 }
@@ -74,23 +85,37 @@ func (i *IncidentService) CheckToAlert() {
 					incident.Trigger = "N"
 					incident.Alert = "N"
 					i.DbRepository.UpdateIncident(&p, i.repeatTimer)
-					log.Printf("New incident for service %s (%s) registered #%d", incident.ServiceName, incident.ServiceID, p.IncidentNumber)
+					log.WithFields(log.Fields{
+						"serviceName":    incident.ServiceName,
+						"ServiceID":      incident.ServiceID,
+						"IncidentNumber": p.IncidentNumber,
+					}).Info("New incident for service registered")
 				}
 			}
 			if incident.ToCheck == "Y" && incident.Trigger == "N" {
 				incident.Alert = "Y"
-				log.Printf("New alert will be created for service %s (%s)", incident.ServiceName, incident.ServiceID)
+				log.WithFields(log.Fields{
+					"ServiceName": incident.ServiceName,
+					"ServiceID":   incident.ServiceID,
+				}).Info("New alert will be created")
 			} else if incident.ToCheck == "Y" && incident.Trigger == "Y" {
-				log.Printf("Alert for service %s (%s) already created", incident.ServiceName, incident.ServiceID)
+				log.WithFields(log.Fields{
+					"ServiceName": incident.ServiceName,
+					"ServiceID":   incident.ServiceID,
+				}).Info("Alert for service already created")
 			}
 		}
 	}
 }
 
+//Alert Trigger new alert for service
 func (i *IncidentService) Alert() {
 	for _, incident := range i.Incidents {
 		if incident.Alert == "Y" && incident.Trigger == "N" {
-			log.Printf("Trigger alert for service %s (%s)", incident.ServiceName, incident.ServiceID)
+			log.WithFields(log.Fields{
+				"ServiceName": incident.ServiceName,
+				"ServiceID":   incident.ServiceID,
+			}).Info("Trigger alert for service")
 			incident.Trigger = "Y"
 			incident.Alert = "N"
 		}

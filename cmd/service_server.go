@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/PagerDuty/go-pagerduty"
@@ -12,6 +11,7 @@ import (
 	"github.com/jaceklubzinski/pd-checker/pkg/database"
 	"github.com/jaceklubzinski/pd-checker/pkg/incident"
 	"github.com/jaceklubzinski/pd-checker/pkg/services"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -53,7 +53,7 @@ to quickly create a Cobra application.`,
 			incidents.MarkToCheck()
 			incidents.CheckToAlert()
 			incidents.Alert()
-			log.Printf("Waitig for %s to next check", triggerEvery)
+			log.Info("Waitig for %s to next check", triggerEvery)
 		}
 
 	},

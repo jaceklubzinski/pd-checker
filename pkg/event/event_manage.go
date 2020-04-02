@@ -1,11 +1,11 @@
 package event
 
 import (
-	"log"
 	"time"
 
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/avast/retry-go"
+	log "github.com/sirupsen/logrus"
 )
 
 //ManageIncident create or resolve incident
@@ -20,7 +20,7 @@ func (o *ManageEvent) ManageIncident() error {
 			}
 			o.Response = resp
 			o.EventMetrics.RecordMetricsEvent(o.Response.Status)
-			log.Println(o.message)
+			log.Info(o.message)
 			return nil
 		},
 		retry.Attempts(retryAttempt),
