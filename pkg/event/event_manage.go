@@ -5,6 +5,7 @@ import (
 
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/avast/retry-go"
+
 	log "github.com/sirupsen/logrus"
 )
 

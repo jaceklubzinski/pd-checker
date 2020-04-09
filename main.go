@@ -1,6 +1,10 @@
 package main
 
-import "github.com/jaceklubzinski/pd-checker/cmd"
+import (
+	_ "github.com/jaceklubzinski/pd-checker/pkg/logformat"
+
+	"github.com/jaceklubzinski/pd-checker/cmd"
+)
 
 // TODO:
 // - retry

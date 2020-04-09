@@ -7,6 +7,7 @@ import (
 	"github.com/jaceklubzinski/pd-checker/pkg/base"
 	"github.com/jaceklubzinski/pd-checker/pkg/client"
 	"github.com/jaceklubzinski/pd-checker/pkg/database"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -39,9 +40,9 @@ func (i *IncidentService) CheckServiceIncident() {
 				i.repeatTimer = i.IncidentClient.AlertDetail(incident.Id)
 				i.DbRepository.SaveIncident(&incident, i.repeatTimer)
 				log.WithFields(log.Fields{
-					"ServiceName":    incident.ServiceName,
-					"ServiceID":      incident.ServiceID,
-					"IncidentNumber": p.IncidentNumber,
+					"ServiceName":    incident.Service.Summary,
+					"ServiceID":      incident.Service.ID,
+					"IncidentNumber": incident.IncidentNumber,
 				}).Info("New incident for service registered")
 			}
 		}

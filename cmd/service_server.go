@@ -11,6 +11,7 @@ import (
 	"github.com/jaceklubzinski/pd-checker/pkg/database"
 	"github.com/jaceklubzinski/pd-checker/pkg/incident"
 	"github.com/jaceklubzinski/pd-checker/pkg/services"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -29,7 +30,7 @@ to quickly create a Cobra application.`,
 		fmt.Println("server called")
 		databasePath, err := cmd.Flags().GetString("database-path")
 		base.CheckErr(err)
-		triggerEvery, _ := cmd.Flags().GetDuration("check-repeat")
+		checkEvery, _ := cmd.Flags().GetDuration("check-repeat")
 		base.CheckErr(err)
 		config := config.NewConfig("", databasePath)
 		db, err := database.ConnectDatabase(config)
@@ -41,7 +42,7 @@ to quickly create a Cobra application.`,
 		incidents := incident.IncidentService{IncidentClient: conn, DbRepository: DbRepository}
 		incidents.IncidentOptions()
 		serviceClient := services.Services{Service: conn}
-		ticker := time.NewTicker(triggerEvery)
+		ticker := time.NewTicker(checkEvery)
 		for ; true; <-ticker.C {
 			service := serviceClient.Service.ListServices()
 			for _, s := range service.Services {
@@ -53,7 +54,9 @@ to quickly create a Cobra application.`,
 			incidents.MarkToCheck()
 			incidents.CheckToAlert()
 			incidents.Alert()
-			log.Info("Waitig for %s to next check", triggerEvery)
+			log.WithFields(log.Fields{
+				"checkEvery": checkEvery,
+			}).Info("Waitig to next check")
 		}
 
 	},
