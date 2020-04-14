@@ -25,9 +25,11 @@ Metrics are available on url 127.0.0.1:2112/metrics`,
 		triggerEvery, _ := cmd.Flags().GetDuration("repeat")
 		opts.RoutingKey = integrationKey
 		clientEvent := event.NewEvent(&opts)
-		clientEvent.EventMetrics.NewRecordMetricsEvent()
+		clientEvent.NewRecordMetricsEvent()
 		clientEvent.PayLoad(triggerEvery.String())
-		log.Info("New event will be triggered every: ", triggerEvery)
+		log.WithFields(log.Fields{
+			"triggerEvery": triggerEvery,
+		}).Info("Waitig to trigger next event")
 		go func() {
 			ticker := time.NewTicker(triggerEvery)
 			for ; true; <-ticker.C {

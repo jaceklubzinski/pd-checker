@@ -20,7 +20,7 @@ func (o *ManageEvent) ManageIncident() error {
 				return err
 			}
 			o.Response = resp
-			o.EventMetrics.RecordMetricsEvent(o.Response.Status)
+			o.RecordMetricsEventOk(o.Response.Status)
 			log.Info(o.message)
 			return nil
 		},
@@ -28,7 +28,7 @@ func (o *ManageEvent) ManageIncident() error {
 		retry.Delay(time.Second*delaySecond),
 		retry.OnRetry(func(n uint, err error) {
 			log.Printf("#%d: %s\n", n, err)
-			o.EventMetrics.RecordMetricsEventError(err.Error())
+			o.RecordMetricsEventError(err.Error())
 		}),
 	)
 	return err

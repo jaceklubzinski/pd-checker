@@ -98,12 +98,12 @@ func (i *IncidentService) CheckToAlert() {
 				log.WithFields(log.Fields{
 					"ServiceName": incident.ServiceName,
 					"ServiceID":   incident.ServiceID,
-				}).Info("New alert will be created")
+				}).Warning("New alert for service will be created")
 			} else if incident.ToCheck == "Y" && incident.Trigger == "Y" {
 				log.WithFields(log.Fields{
 					"ServiceName": incident.ServiceName,
 					"ServiceID":   incident.ServiceID,
-				}).Info("Alert for service already created")
+				}).Warning("Alert for service already created")
 			}
 		}
 	}

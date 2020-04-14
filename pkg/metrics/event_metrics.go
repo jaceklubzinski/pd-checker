@@ -38,8 +38,8 @@ func (e *RecordMetricsEvent) RecordMetricsEventError(toParse string) {
 	}
 }
 
-//RecordMetricsEvent prometheus success metric
-func (e *RecordMetricsEvent) RecordMetricsEvent(toParse string) {
+//RecordMetricsEventOk prometheus success metric
+func (e *RecordMetricsEvent) RecordMetricsEventOk(toParse string) {
 	match, _ := regexp.MatchString("success", toParse)
 	if match {
 		e.Event.With(prometheus.Labels{"code": "20x"}).Inc()

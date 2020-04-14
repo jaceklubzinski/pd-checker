@@ -11,6 +11,7 @@ import (
 	"github.com/jaceklubzinski/pd-checker/pkg/database"
 	"github.com/jaceklubzinski/pd-checker/pkg/incident"
 	"github.com/jaceklubzinski/pd-checker/pkg/services"
+	"github.com/jaceklubzinski/pd-checker/pkg/ui"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -37,28 +38,31 @@ to quickly create a Cobra application.`,
 		base.CheckErr(err)
 		DbRepository := database.NewIncidentRepository(db)
 		DbRepository.InitIncidentRepository()
+		server := ui.NewServer(DbRepository)
 		pdclient := pagerduty.NewClient(getFlagAuthToken())
 		conn := client.NewApiClient(pdclient)
 		incidents := incident.IncidentService{IncidentClient: conn, DbRepository: DbRepository}
 		incidents.IncidentOptions()
 		serviceClient := services.Services{Service: conn}
 		ticker := time.NewTicker(checkEvery)
-		for ; true; <-ticker.C {
-			service := serviceClient.Service.ListServices()
-			for _, s := range service.Services {
-				DbRepository.SaveService(&s)
+		go func() {
+			for ; true; <-ticker.C {
+				service := serviceClient.Service.ListServices()
+				for _, s := range service.Services {
+					DbRepository.SaveService(&s)
+				}
+				incidents.Services = DbRepository.GetService()
+				incidents.Incidents = DbRepository.GetIncident()
+				incidents.CheckServiceIncident()
+				incidents.MarkToCheck()
+				incidents.CheckToAlert()
+				incidents.Alert()
+				log.WithFields(log.Fields{
+					"checkEvery": checkEvery,
+				}).Info("Waitig to next check")
 			}
-			incidents.Services = DbRepository.GetService()
-			incidents.Incidents = DbRepository.GetIncident()
-			incidents.CheckServiceIncident()
-			incidents.MarkToCheck()
-			incidents.CheckToAlert()
-			incidents.Alert()
-			log.WithFields(log.Fields{
-				"checkEvery": checkEvery,
-			}).Info("Waitig to next check")
-		}
-
+		}()
+		server.Listen()
 	},
 }
 

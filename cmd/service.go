@@ -10,6 +10,7 @@ import (
 	"github.com/jaceklubzinski/pd-checker/pkg/database"
 	"github.com/jaceklubzinski/pd-checker/pkg/incident"
 	"github.com/jaceklubzinski/pd-checker/pkg/services"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

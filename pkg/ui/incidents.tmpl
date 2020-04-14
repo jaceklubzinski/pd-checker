@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Checker incidents for services</title>
+        <style> 
+        table, th, td { 
+            border: 1px solid black; 
+        } 
+    </style> 
+  </head>
+  <body>
+    <table style="width:100%">
+      	<tr>
+          <td>Incident</td>
+          <td>Service</td>
+          <td>Create At</td>
+    	</tr>
+      {{ range .}}
+      <tr>
+          <td>{{ .Title }}</td>
+          <td>{{ .ServiceName}}</td>
+          <td>{{ .CreateAt }}</td>
+      </tr>
+      {{end}}
+    </table>
+  </body>
+</html>

@@ -20,7 +20,7 @@ var triggerCmd = &cobra.Command{
 		integrationKey := viper.GetString("pagerduty_integration_key")
 		opts.RoutingKey = integrationKey
 		client := event.NewEvent(&opts)
-		client.EventMetrics.NewRecordMetricsEvent()
+		client.NewRecordMetricsEvent()
 		client.PayLoad("24h")
 		client.TriggerEvent()
 		err := client.ManageIncident()
