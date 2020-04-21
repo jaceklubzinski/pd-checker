@@ -22,16 +22,16 @@ type IncidentService struct {
 	Services       []*database.ServiceDB
 }
 
-//IncidentOptions set options to get incidents
-func (i *IncidentService) IncidentOptions() {
+//SetOptions set options to get incidents
+func (i *IncidentService) SetOptions() {
 	i.Options.Statuses = []string{"resolved"}
 	i.Options.Until = time.Now().String()
 	i.Options.Since = time.Now().AddDate(0, 0, -1).String()
 	i.Options.SortBy = "created_at:asc"
 }
 
-//CheckServiceIncident count incidents for service
-func (i *IncidentService) CheckServiceIncident() {
+//CheckTriggered count incidents for service
+func (i *IncidentService) CheckTriggered() {
 	for _, service := range i.Services {
 		i.Options.ServiceIDs = []string{service.ID}
 		registry := i.IncidentClient.ListIncidents(i.Options)
@@ -43,6 +43,7 @@ func (i *IncidentService) CheckServiceIncident() {
 					"ServiceName":    incident.Service.Summary,
 					"ServiceID":      incident.Service.ID,
 					"IncidentNumber": incident.IncidentNumber,
+					"CreatedAt":      incident.CreatedAt,
 				}).Info("New incident for service registered")
 			}
 		}

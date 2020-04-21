@@ -20,13 +20,8 @@ import (
 // serverCmd represents the server command
 var serviceServerCmd = &cobra.Command{
 	Use:   "server",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Check for new Pagerduty event in a server mode",
+	Long:  "Check for new Pagerduty event in a server mode and generate status page",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("server called")
 		databasePath, err := cmd.Flags().GetString("database-path")
@@ -42,18 +37,18 @@ to quickly create a Cobra application.`,
 		pdclient := pagerduty.NewClient(getFlagAuthToken())
 		conn := client.NewApiClient(pdclient)
 		incidents := incident.IncidentService{IncidentClient: conn, DbRepository: DbRepository}
-		incidents.IncidentOptions()
+		incidents.SetOptions()
 		serviceClient := services.Services{Service: conn}
 		ticker := time.NewTicker(checkEvery)
 		go func() {
 			for ; true; <-ticker.C {
-				service := serviceClient.Service.ListServices()
+				service := serviceClient.Service.Get()
 				for _, s := range service.Services {
 					DbRepository.SaveService(&s)
 				}
 				incidents.Services = DbRepository.GetService()
 				incidents.Incidents = DbRepository.GetIncident()
-				incidents.CheckServiceIncident()
+				incidents.CheckTriggered()
 				incidents.MarkToCheck()
 				incidents.CheckToAlert()
 				incidents.Alert()

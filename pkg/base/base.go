@@ -2,6 +2,8 @@ package base
 
 import (
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 //RepeatFunction repeat given function every n seconds
@@ -15,7 +17,7 @@ func RepeatFunction(a func()) {
 //CheckErr return error
 func CheckErr(err error) {
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 }
 

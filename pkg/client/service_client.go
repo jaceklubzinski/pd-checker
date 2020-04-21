@@ -6,12 +6,13 @@ import (
 )
 
 type ServiceClient interface {
-	ListServices() *pagerduty.ListServiceResponse
+	Get() *pagerduty.ListServiceResponse
 }
 
 var serviceOpts pagerduty.ListServiceOptions
 
-func (c *ApiClient) ListServices() *pagerduty.ListServiceResponse {
+//Get all available serices from PagerDuty
+func (c *ApiClient) Get() *pagerduty.ListServiceResponse {
 	eps, err := c.client.ListServices(serviceOpts)
 	base.CheckErr(err)
 	return eps
