@@ -7,7 +7,7 @@ import (
 
 type IncidentClient interface {
 	ListIncidents(Options pagerduty.ListIncidentsOptions) *pagerduty.ListIncidentsResponse
-	AlertDetail(id string) (repeatTimer interface{})
+	IncidentAlerts(id string) *pagerduty.ListAlertsResponse
 }
 
 func (c *ApiClient) ListIncidents(Options pagerduty.ListIncidentsOptions) *pagerduty.ListIncidentsResponse {
@@ -16,11 +16,8 @@ func (c *ApiClient) ListIncidents(Options pagerduty.ListIncidentsOptions) *pager
 	return eps
 }
 
-func (c *ApiClient) AlertDetail(id string) (repeatTimer interface{}) {
+func (c *ApiClient) IncidentAlerts(id string) *pagerduty.ListAlertsResponse {
 	eps, err := c.client.ListIncidentAlerts(id)
 	base.CheckErr(err)
-	for _, i := range eps.Alerts {
-		repeatTimer = i.Body["details"]
-	}
-	return repeatTimer
+	return eps
 }
