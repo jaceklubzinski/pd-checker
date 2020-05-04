@@ -58,22 +58,20 @@ var serviceServerCmd = &cobra.Command{
 					if inc.ToCheck == "Y" {
 						incidents.SetOptionsFromIncident(inc)
 						if i := incidents.CheckForNew(); i != nil {
-							repeatTimer := incidents.AlertDetails(i.ID)
+							repeatTimer := incidents.AlertDetails(i.Id)
 							inc.ToCheck = "N"
 							inc.Trigger = "N"
 							inc.Alert = "N"
 							DbRepository.UpdateIncident(i, repeatTimer)
-							inc.SetAlertState()
-							incidents.Alert(inc)
-							DbRepository.UpdateIncidentState(inc)
-
 						}
-
+						inc.SetAlertState()
+						incidents.Alert(inc)
+						DbRepository.UpdateIncidentState(inc)
 					}
 				}
 				log.WithFields(log.Fields{
 					"checkEvery": checkEvery,
-				}).Info("Waitig to next check")
+				}).Info("Waiting to next check")
 			}
 		}()
 		server.Listen()
