@@ -5,8 +5,8 @@ import (
 	"github.com/jaceklubzinski/pd-checker/pkg/base"
 )
 
-//ServiceDB structure for service stored in database
-type ServiceDB struct {
+//Service structure for service stored in database
+type Service struct {
 	ID   string
 	Name string
 }
@@ -22,11 +22,11 @@ func (d *Store) SaveService(service *pagerduty.Service) {
 }
 
 //GetService get all PagerDuty services without checker incidents
-func (d *Store) GetService() (service []*ServiceDB) {
+func (d *Store) GetService() (service []*Service) {
 	r, err := d.db.Query("select services.id,services.name FROM services left join incidents on (services.id = incidents.serviceid) where incidents.serviceid is NULL;")
 	base.CheckErr(err)
 	for r.Next() {
-		var serviceTmp ServiceDB
+		var serviceTmp Service
 		err := r.Scan(&serviceTmp.ID, &serviceTmp.Name)
 		base.CheckErr(err)
 		service = append(service, &serviceTmp)

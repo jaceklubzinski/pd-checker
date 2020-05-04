@@ -36,8 +36,7 @@ var serviceServerCmd = &cobra.Command{
 		server := ui.NewServer(DbRepository)
 		pdclient := pagerduty.NewClient(getFlagAuthToken())
 		conn := client.NewApiClient(pdclient)
-		incidents := incident.IncidentService{IncidentClient: conn, DbRepository: DbRepository}
-		incidents.SetOptions()
+		incidents := incident.Manager{IncidentClient: conn}
 		serviceClient := services.Services{Service: conn}
 		ticker := time.NewTicker(checkEvery)
 		go func() {
@@ -46,15 +45,33 @@ var serviceServerCmd = &cobra.Command{
 				for _, s := range service.Services {
 					DbRepository.SaveService(&s)
 				}
-				incidents.Services = DbRepository.GetService()
-				incidents.Incidents = DbRepository.GetIncident()
-				incidents.CheckTriggered()
-				incidents.MarkToCheck()
-				incidents.CheckToAlert()
-				incidents.Alert()
+				for _, s := range DbRepository.GetService() {
+					incidents.SetOptions()
+					incidents.Options.ServiceIDs = []string{s.ID}
+					if i := incidents.CheckForNew(); i != nil {
+						repeatTimer := incidents.AlertDetails(i.Id)
+						DbRepository.SaveIncident(i, repeatTimer)
+					}
+				}
+				for _, inc := range DbRepository.GetIncident() {
+					inc.MarkToCheck()
+					if inc.ToCheck == "Y" {
+						incidents.SetOptionsFromIncident(inc)
+						if i := incidents.CheckForNew(); i != nil {
+							repeatTimer := incidents.AlertDetails(i.Id)
+							inc.ToCheck = "N"
+							inc.Trigger = "N"
+							inc.Alert = "N"
+							DbRepository.UpdateIncident(i, repeatTimer)
+						}
+						inc.SetAlertState()
+						incidents.Alert(inc)
+						DbRepository.UpdateIncidentState(inc)
+					}
+				}
 				log.WithFields(log.Fields{
 					"checkEvery": checkEvery,
-				}).Info("Waitig to next check")
+				}).Info("Waiting to next check")
 			}
 		}()
 		server.Listen()

@@ -11,116 +11,56 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//IncidentService struct to manage incidents
-type IncidentService struct {
+//Manager struct to manage incidents
+type Manager struct {
 	IncidentClient client.IncidentClient
 	Options        pagerduty.ListIncidentsOptions
-	DbRepository   database.IncidentRepository
-	repeatTimer    interface{}
-	Incidents      []*database.IncidentDb
-	Incident       *database.IncidentDb
-	Services       []*database.ServiceDB
+	Incidents      []*database.Incident
+	Services       []*database.Service
 }
 
 //SetOptions set options to get incidents
-func (i *IncidentService) SetOptions() {
-	i.Options.Statuses = []string{"resolved"}
-	i.Options.Until = time.Now().String()
-	i.Options.Since = time.Now().AddDate(0, 0, -1).String()
-	i.Options.SortBy = "created_at:asc"
+func (m *Manager) SetOptions() {
+	m.Options.Statuses = []string{"resolved"}
+	m.Options.Until = time.Now().String()
+	m.Options.Since = time.Now().AddDate(0, 0, -1).String()
+	m.Options.SortBy = "created_at:asc"
 }
 
-//CheckTriggered count incidents for service
-func (i *IncidentService) CheckTriggered() {
-	for _, service := range i.Services {
-		i.Options.ServiceIDs = []string{service.ID}
-		registry := i.IncidentClient.ListIncidents(i.Options)
-		for _, incident := range registry.Incidents {
-			if incident.Title == "PD CHECKER - OK" {
-				i.repeatTimer = i.IncidentClient.AlertDetail(incident.Id)
-				i.DbRepository.SaveIncident(&incident, i.repeatTimer)
-				log.WithFields(log.Fields{
-					"ServiceName":    incident.Service.Summary,
-					"ServiceID":      incident.Service.ID,
-					"IncidentNumber": incident.IncidentNumber,
-					"CreatedAt":      incident.CreatedAt,
-				}).Info("New incident for service registered")
-			}
-		}
-	}
+//SetOptionsFromIncident set options from existed incident to check again triggered incidents
+func (m *Manager) SetOptionsFromIncident(inc *database.Incident) {
+	m.Options.ServiceIDs = []string{inc.ServiceID}
+	m.Options.Since = base.AddDurationToDate(inc.CreateAt, inc.Timer)
+	m.Options.Until = base.DateNow()
 }
 
-//MarkToCheck check if service incident should be considered again base on last creation time and duraiton
-func (i *IncidentService) MarkToCheck() {
-	for _, incident := range i.Incidents {
-		serviceTimer, err := time.ParseDuration(incident.Timer)
-		base.CheckErr(err)
-		lastTillNow := base.LastTillNowDuration(incident.CreateAt)
-		if lastTillNow > serviceTimer {
-			incident.ToCheck = "Y"
-			log.WithFields(log.Fields{
-				"ServiceName":  incident.ServiceName,
-				"ServiceID":    incident.ServiceID,
-				"LastCreateAt": incident.CreateAt,
-			}).Info("Checking for new alert")
-		} else {
-			log.WithFields(log.Fields{
-				"ServiceName": incident.ServiceName,
-				"ServiceID":   incident.ServiceID,
-			}).Info("Service has working PagerDuty integration")
+//CheckForNew check if service incident was created
+func (m *Manager) CheckForNew() *pagerduty.Incident {
+	registry := m.IncidentClient.ListIncidents(m.Options)
+	for _, p := range registry.Incidents {
+		if p.Title == "PD CHECKER - OK" {
+			return &p
 		}
 	}
-}
-
-//CheckToAlert check if service incident was created
-func (i *IncidentService) CheckToAlert() {
-	for _, incident := range i.Incidents {
-		if incident.ToCheck == "Y" {
-			i.Options.ServiceIDs = []string{incident.ServiceID}
-			i.Options.Since = base.AddDurationToDate(incident.CreateAt, incident.Timer)
-			i.Options.Until = base.DateNow()
-			registry := i.IncidentClient.ListIncidents(i.Options)
-			for _, p := range registry.Incidents {
-				if p.Title == "PD CHECKER - OK" {
-					i.repeatTimer = i.IncidentClient.AlertDetail(p.Id)
-					incident.ToCheck = "N"
-					incident.Trigger = "N"
-					incident.Alert = "N"
-					i.DbRepository.UpdateIncident(&p, i.repeatTimer)
-					log.WithFields(log.Fields{
-						"serviceName":    incident.ServiceName,
-						"ServiceID":      incident.ServiceID,
-						"IncidentNumber": p.IncidentNumber,
-					}).Info("New incident for service registered")
-				}
-			}
-			if incident.ToCheck == "Y" && incident.Trigger == "N" {
-				incident.Alert = "Y"
-				log.WithFields(log.Fields{
-					"ServiceName": incident.ServiceName,
-					"ServiceID":   incident.ServiceID,
-				}).Warning("New alert for service will be created")
-			} else if incident.ToCheck == "Y" && incident.Trigger == "Y" {
-				log.WithFields(log.Fields{
-					"ServiceName": incident.ServiceName,
-					"ServiceID":   incident.ServiceID,
-				}).Warning("Alert for service already created")
-			}
-		}
-	}
+	return nil
 }
 
 //Alert Trigger new alert for service
-func (i *IncidentService) Alert() {
-	for _, incident := range i.Incidents {
-		if incident.Alert == "Y" && incident.Trigger == "N" {
-			log.WithFields(log.Fields{
-				"ServiceName": incident.ServiceName,
-				"ServiceID":   incident.ServiceID,
-			}).Info("Trigger alert for service")
-			incident.Trigger = "Y"
-			incident.Alert = "N"
-		}
-		i.DbRepository.UpdateIncidentState(incident)
+func (m *Manager) Alert(inc *database.Incident) {
+	if inc.Alert == "Y" && inc.Trigger == "N" {
+		log.WithFields(log.Fields{
+			"ServiceName": inc.ServiceName,
+			"ServiceID":   inc.ServiceID,
+		}).Info("Trigger alert for service")
+		inc.Trigger = "Y"
+		inc.Alert = "N"
 	}
+}
+
+func (m *Manager) AlertDetails(id string) (repeatTimer interface{}) {
+	a := m.IncidentClient.IncidentAlerts(id)
+	for _, i := range a.Alerts {
+		repeatTimer = i.Body["details"]
+	}
+	return repeatTimer
 }
