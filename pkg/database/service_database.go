@@ -12,13 +12,19 @@ type Service struct {
 }
 
 //SaveService insert service to database
-func (d *Store) SaveService(service *pagerduty.Service) {
+func (d *Store) SaveService(service *pagerduty.Service) error {
 	id := service.APIObject.ID
 	name := service.APIObject.Summary
 	stmt, err := d.db.Prepare("REPLACE INTO services values(?,?)")
-	base.CheckErr(err)
-	_, err = stmt.Exec(id, name)
-	base.CheckErr(err)
+	if err != nil {
+		return err
+	}
+	sqlResult, err := stmt.Exec(id, name)
+	if err != nil {
+		return err
+	}
+	_, err = sqlResult.RowsAffected()
+	return err
 }
 
 //GetService get all PagerDuty services without checker incidents
