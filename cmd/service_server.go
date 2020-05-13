@@ -43,7 +43,8 @@ var serviceServerCmd = &cobra.Command{
 			for ; true; <-ticker.C {
 				service := serviceClient.Service.Get()
 				for _, s := range service.Services {
-					DbRepository.SaveService(&s)
+					err := DbRepository.SaveService(&s)
+					base.CheckErr(err)
 				}
 				for _, s := range DbRepository.GetService() {
 					incidents.SetOptions()

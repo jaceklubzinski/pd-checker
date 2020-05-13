@@ -15,8 +15,6 @@ import (
 type Manager struct {
 	IncidentClient client.IncidentClient
 	Options        pagerduty.ListIncidentsOptions
-	Incidents      []*database.Incident
-	Services       []*database.Service
 }
 
 //SetOptions set options to get incidents
