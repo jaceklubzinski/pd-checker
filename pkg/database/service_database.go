@@ -2,7 +2,6 @@ package database
 
 import (
 	"github.com/PagerDuty/go-pagerduty"
-	"github.com/jaceklubzinski/pd-checker/pkg/base"
 )
 
 //Service structure for service stored in database
@@ -28,14 +27,18 @@ func (d *Store) SaveService(service *pagerduty.Service) error {
 }
 
 //GetService get all PagerDuty services without checker incidents
-func (d *Store) GetService() (service []*Service) {
+func (d *Store) GetService() (service []*Service, err error) {
 	r, err := d.db.Query("select services.id,services.name FROM services left join incidents on (services.id = incidents.serviceid) where incidents.serviceid is NULL;")
-	base.CheckErr(err)
+	if err != nil {
+		return nil, err
+	}
 	for r.Next() {
 		var serviceTmp Service
 		err := r.Scan(&serviceTmp.ID, &serviceTmp.Name)
-		base.CheckErr(err)
+		if err != nil {
+			return nil, err
+		}
 		service = append(service, &serviceTmp)
 	}
-	return
+	return service, nil
 }

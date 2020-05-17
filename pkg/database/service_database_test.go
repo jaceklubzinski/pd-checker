@@ -69,7 +69,11 @@ func TestGetService(t *testing.T) {
 	mock.ExpectQuery("select (.+) FROM services*").
 		WillReturnRows(rows)
 
-	for _, s := range dbRepository.GetService() {
+	services, err := dbRepository.GetService()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when select services", err)
+	}
+	for _, s := range services {
 		assert.Equal(t, s.ID, "PK6TEST1")
 		assert.Equal(t, s.Name, "test-service1")
 	}
