@@ -46,7 +46,9 @@ var serviceServerCmd = &cobra.Command{
 					err := DbRepository.SaveService(&s)
 					base.CheckErr(err)
 				}
-				for _, s := range DbRepository.GetService() {
+				dbservice, err := DbRepository.GetService()
+				base.CheckErr(err)
+				for _, s := range dbservice {
 					incidents.SetOptions()
 					incidents.Options.ServiceIDs = []string{s.ID}
 					if i := incidents.CheckForNew(); i != nil {
@@ -54,7 +56,8 @@ var serviceServerCmd = &cobra.Command{
 						DbRepository.SaveIncident(i, repeatTimer)
 					}
 				}
-				for _, inc := range DbRepository.GetIncident() {
+				dbincident, err := DbRepository.GetIncident()
+				for _, inc := range dbincident {
 					inc.MarkToCheck()
 					if inc.ToCheck == "Y" {
 						incidents.SetOptionsFromIncident(inc)

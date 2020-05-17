@@ -11,9 +11,12 @@ func (s Server) Listen() {
 }
 
 func (s Server) incident(w http.ResponseWriter, req *http.Request) {
-	incidents := s.DbRepository.GetIncident()
+	incidents, err := s.DbRepository.GetIncident()
+	if err != nil {
+		panic(err)
+	}
 	t := template.Must(template.ParseFiles("pkg/ui/incidents.tmpl"))
-	err := t.Execute(w, incidents)
+	err = t.Execute(w, incidents)
 	if err != nil {
 		panic(err)
 	}
