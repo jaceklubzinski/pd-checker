@@ -5,6 +5,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/PagerDuty/go-pagerduty"
+	"github.com/jaceklubzinski/pd-checker/pkg/incident"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -77,7 +78,7 @@ func TestUpdateIncidentState(t *testing.T) {
 	mock.ExpectPrepare("UPDATE incidents set").ExpectExec().
 		WithArgs("Y", "Y", "Y", "PK6TEST1").
 		WillReturnResult(sqlmock.NewResult(0, 1))
-	i := &Incident{
+	i := &incident.Incident{
 		Alert:     "Y",
 		ToCheck:   "Y",
 		Trigger:   "Y",

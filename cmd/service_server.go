@@ -58,19 +58,20 @@ var serviceServerCmd = &cobra.Command{
 				}
 				dbincident, err := DbRepository.GetIncident()
 				for _, inc := range dbincident {
-					inc.MarkToCheck()
-					if inc.ToCheck == "Y" {
-						incidents.SetOptionsFromIncident(inc)
+					incidents.Incident = *inc
+					incidents.MarkToCheck()
+					if incidents.ToCheck == "Y" {
+						incidents.SetOptionsFromIncident()
 						if i := incidents.CheckForNew(); i != nil {
 							repeatTimer := incidents.AlertDetails(i.Id)
-							inc.ToCheck = "N"
-							inc.Trigger = "N"
-							inc.Alert = "N"
+							incidents.ToCheck = "N"
+							incidents.Trigger = "N"
+							incidents.Alert = "N"
 							DbRepository.UpdateIncident(i, repeatTimer)
 						}
-						inc.SetAlertState()
-						incidents.Alert(inc)
-						DbRepository.UpdateIncidentState(inc)
+						incidents.SetAlertState()
+						incidents.TriggerAlert()
+						DbRepository.UpdateIncidentState(&incidents.Incident)
 					}
 				}
 				log.WithFields(log.Fields{
