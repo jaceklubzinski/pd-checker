@@ -19,3 +19,4 @@ Next pd-checker-service will scan all available services every _triggerEvery_ ti
 
 ## Usage
 Integration key _Events API v2_
+test
