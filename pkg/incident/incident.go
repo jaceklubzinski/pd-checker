@@ -26,9 +26,11 @@ type Incident struct {
 }
 
 //MarkToCheck check if service incident should be considered again base on last creation time and duraiton
-func (i *Incident) MarkToCheck() {
+func (i *Incident) MarkToCheck() error {
 	serviceTimer, err := time.ParseDuration(i.Timer)
-	base.CheckErr(err)
+	if err != nil {
+		return err
+	}
 	lastTillNow := base.LastTillNowDuration(i.CreateAt)
 	if lastTillNow > serviceTimer {
 		i.ToCheck = "Y"
@@ -43,9 +45,10 @@ func (i *Incident) MarkToCheck() {
 			"ServiceID":   i.ServiceID,
 		}).Info("Service has working PagerDuty integration")
 	}
+	return err
 }
 
-//SetAlertState check if service incident was created
+//SetAlertState check if incident for service was already created
 func (i *Incident) SetAlertState() {
 	if i.ToCheck == "Y" && i.Trigger == "N" {
 		i.Alert = "Y"

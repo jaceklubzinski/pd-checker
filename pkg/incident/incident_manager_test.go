@@ -50,3 +50,19 @@ func TestAlertDetails(t *testing.T) {
 	repeatTimer := incidents.AlertDetails("id")
 	assert.Equal(t, repeatTimer, "1s")
 }
+
+func TestTriggerAlert(t *testing.T) {
+	i := Manager{
+		Incident: Incident{
+			Alert:   "Y",
+			Trigger: "N",
+		},
+	}
+	i.TriggerAlert()
+	assert.Equal(t, i.Alert, "N")
+	assert.Equal(t, i.Trigger, "Y")
+	i.Trigger = "N"
+	i.TriggerAlert()
+	assert.Equal(t, i.Alert, "N")
+	assert.Equal(t, i.Trigger, "N")
+}
