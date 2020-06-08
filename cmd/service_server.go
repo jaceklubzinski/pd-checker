@@ -43,9 +43,12 @@ var serviceServerCmd = &cobra.Command{
 			for ; true; <-ticker.C {
 				service := serviceClient.Service.Get()
 				for _, s := range service.Services {
-					DbRepository.SaveService(&s)
+					err := DbRepository.SaveService(&s)
+					base.CheckErr(err)
 				}
-				for _, s := range DbRepository.GetService() {
+				dbservice, err := DbRepository.GetService()
+				base.CheckErr(err)
+				for _, s := range dbservice {
 					incidents.SetOptions()
 					incidents.Options.ServiceIDs = []string{s.ID}
 					if i := incidents.CheckForNew(); i != nil {
@@ -53,20 +56,22 @@ var serviceServerCmd = &cobra.Command{
 						DbRepository.SaveIncident(i, repeatTimer)
 					}
 				}
-				for _, inc := range DbRepository.GetIncident() {
-					inc.MarkToCheck()
-					if inc.ToCheck == "Y" {
-						incidents.SetOptionsFromIncident(inc)
+				dbincident, err := DbRepository.GetIncident()
+				for _, inc := range dbincident {
+					incidents.Incident = *inc
+					incidents.MarkToCheck()
+					if incidents.ToCheck == "Y" {
+						incidents.SetOptionsFromIncident()
 						if i := incidents.CheckForNew(); i != nil {
 							repeatTimer := incidents.AlertDetails(i.Id)
-							inc.ToCheck = "N"
-							inc.Trigger = "N"
-							inc.Alert = "N"
+							incidents.ToCheck = "N"
+							incidents.Trigger = "N"
+							incidents.Alert = "N"
 							DbRepository.UpdateIncident(i, repeatTimer)
 						}
-						inc.SetAlertState()
-						incidents.Alert(inc)
-						DbRepository.UpdateIncidentState(inc)
+						incidents.SetAlertState()
+						incidents.TriggerAlert()
+						DbRepository.UpdateIncidentState(&incidents.Incident)
 					}
 				}
 				log.WithFields(log.Fields{
