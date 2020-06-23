@@ -2,17 +2,20 @@ package event
 
 import (
 	"github.com/PagerDuty/go-pagerduty"
+	"github.com/jaceklubzinski/pd-checker/pkg/client"
 	"github.com/jaceklubzinski/pd-checker/pkg/metrics"
 )
 
-//ManageEvent struct that operate on alert
-type ManageEvent struct {
+//Event struct that operate on alert
+type Event struct {
 	Options  *pagerduty.V2Event
 	Response *pagerduty.V2EventResponse
+	manager  client.Manager
 	message  string
 	metrics.RecordMetricsEvent
 }
 
-func NewEvent(Options *pagerduty.V2Event) *ManageEvent {
-	return &ManageEvent{Options: Options}
+//NewEvent new event
+func NewEvent(Options *pagerduty.V2Event) *Event {
+	return &Event{Options: Options}
 }
