@@ -12,6 +12,7 @@ type MockApiClient struct{}
 type MockIncidentClient interface {
 	ListIncidents(Options pagerduty.ListIncidentsOptions) *pagerduty.ListIncidentsResponse
 	IncidentAlerts(id string) *pagerduty.ListAlertsResponse
+	CreateIncident(Options *pagerduty.CreateIncidentOptions) error
 }
 
 func (c *MockApiClient) ListIncidents(Options pagerduty.ListIncidentsOptions) *pagerduty.ListIncidentsResponse {
@@ -22,6 +23,10 @@ func (c *MockApiClient) ListIncidents(Options pagerduty.ListIncidentsOptions) *p
 			},
 		},
 	}
+}
+
+func (c *MockApiClient) CreateIncident(Options *pagerduty.CreateIncidentOptions) error {
+	return nil
 }
 
 func (c *MockApiClient) IncidentAlerts(id string) *pagerduty.ListAlertsResponse {
@@ -52,7 +57,9 @@ func TestAlertDetails(t *testing.T) {
 }
 
 func TestTriggerAlert(t *testing.T) {
+	client := &MockApiClient{}
 	i := Manager{
+		IncidentClient: client,
 		Incident: Incident{
 			Alert:   "Y",
 			Trigger: "N",

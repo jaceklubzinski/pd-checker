@@ -70,7 +70,14 @@ var serviceServerCmd = &cobra.Command{
 							DbRepository.UpdateIncident(i, repeatTimer)
 						}
 						incidents.SetAlertState()
-						incidents.TriggerAlert()
+						err = incidents.TriggerAlert()
+						if err != nil {
+							log.WithFields(log.Fields{
+								"ServiceName": inc.ServiceName,
+								"ServiceID":   inc.ServiceID,
+								"Error":       err,
+							}).Errorln("New Incident can't be created")
+						}
 						DbRepository.UpdateIncidentState(&incidents.Incident)
 					}
 				}

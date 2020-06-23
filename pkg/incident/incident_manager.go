@@ -44,8 +44,24 @@ func (m *Manager) CheckForNew() *pagerduty.Incident {
 }
 
 //TriggerAlert Trigger new alert for service
-func (m *Manager) TriggerAlert() {
+func (m *Manager) TriggerAlert() error {
 	if m.Incident.Alert == "Y" && m.Incident.Trigger == "N" {
+		Options := pagerduty.CreateIncidentOptions{
+			Type:  "incident",
+			Title: "PagerDuty integration stop working",
+			Service: &pagerduty.APIReference{
+				Type: "service_reference",
+				ID:   m.Incident.ServiceID,
+			},
+			Body: &pagerduty.APIDetails{
+				Type:    "incident_body",
+				Details: "Pagerduty integration for service " + m.Incident.ServiceName + " stop working. Last pd-checker incident was created at " + m.Incident.CreateAt,
+			},
+		}
+		err := m.IncidentClient.CreateIncident(&Options)
+		if err != nil {
+			return err
+		}
 		log.WithFields(log.Fields{
 			"ServiceName": m.Incident.ServiceName,
 			"ServiceID":   m.Incident.ServiceID,
@@ -53,6 +69,7 @@ func (m *Manager) TriggerAlert() {
 		m.Incident.Trigger = "Y"
 		m.Incident.Alert = "N"
 	}
+	return nil
 }
 
 //AlertDetails get detailed information from PagerDuty Incident
