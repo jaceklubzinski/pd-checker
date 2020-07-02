@@ -21,12 +21,12 @@ var triggerCmd = &cobra.Command{
 		opts.RoutingKey = integrationKey
 		client := event.NewEvent(&opts)
 		client.NewRecordMetricsEvent()
-		client.PayLoad("24h")
-		client.TriggerEvent()
-		err := client.ManageIncident()
+		client.SetPayLoad("24h")
+		client.SetOptionsTrigger()
+		err := client.Trigger()
 		if err == nil {
-			client.ResolveEvent()
-			_ = client.ManageIncident()
+			client.SetOptionsResolve()
+			_ = client.Trigger()
 		}
 	},
 }

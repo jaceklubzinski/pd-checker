@@ -26,18 +26,18 @@ Metrics are available on url 127.0.0.1:2112/metrics`,
 		opts.RoutingKey = integrationKey
 		clientEvent := event.NewEvent(&opts)
 		clientEvent.NewRecordMetricsEvent()
-		clientEvent.PayLoad(triggerEvery.String())
+		clientEvent.SetPayLoad(triggerEvery.String())
 		log.WithFields(log.Fields{
 			"triggerEvery": triggerEvery,
 		}).Info("Waitig to trigger next event")
 		go func() {
 			ticker := time.NewTicker(triggerEvery)
 			for ; true; <-ticker.C {
-				clientEvent.TriggerEvent()
-				err := clientEvent.ManageIncident()
+				clientEvent.SetOptionsTrigger()
+				err := clientEvent.Trigger()
 				if err == nil {
-					clientEvent.ResolveEvent()
-					_ = clientEvent.ManageIncident()
+					clientEvent.SetOptionsResolve()
+					_ = clientEvent.Trigger()
 				}
 			}
 		}()
