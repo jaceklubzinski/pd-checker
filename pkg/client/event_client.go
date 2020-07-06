@@ -1,6 +1,8 @@
 package client
 
-import "github.com/PagerDuty/go-pagerduty"
+import (
+	"github.com/PagerDuty/go-pagerduty"
+)
 
 type Manager interface {
 	ManageEvent(options *pagerduty.V2Event) (*pagerduty.V2EventResponse, error)

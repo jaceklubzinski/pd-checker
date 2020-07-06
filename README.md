@@ -1,4 +1,7 @@
-# pd-checker-service
+# Architecure overview
+![Diagram](doc/images/pd-checker.png)
+
+#pd-checker-service
 
 - Get all services from PagerDuty and save them to sqlite database (services table)
 - Check pd-checker event for services that don't have yet any event and save them to sqlite database (incidents table)
