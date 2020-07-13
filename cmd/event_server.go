@@ -21,6 +21,7 @@ Metrics are available on url 127.0.0.1:2112/metrics`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("server called")
 		var opts pagerduty.V2Event
+		metricsPort, _ := cmd.Flags().GetString("metrics-port")
 		integrationKey := viper.GetString("pagerduty_integration_key")
 		triggerEvery, _ := cmd.Flags().GetDuration("repeat")
 		opts.RoutingKey = integrationKey
@@ -41,7 +42,7 @@ Metrics are available on url 127.0.0.1:2112/metrics`,
 				}
 			}
 		}()
-		metrics.Server()
+		metrics.Server(metricsPort)
 	},
 }
 

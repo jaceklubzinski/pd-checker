@@ -37,7 +37,6 @@ func (d *Store) UpdateIncident(incident *pagerduty.Incident, incidentTimer inter
 		}).Info("New incident for service registered")
 	}
 	return err
-
 }
 
 //SaveIncident insert incident to database

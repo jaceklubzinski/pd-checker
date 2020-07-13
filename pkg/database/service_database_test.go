@@ -9,13 +9,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type MockApiClient struct{}
+type mockApiClient struct{}
 
-type MockIncidentClient interface {
+type mockIncidentClient interface {
 	Get() *pagerduty.ListServiceResponse
 }
 
-func (c *MockApiClient) Get() *pagerduty.ListServiceResponse {
+func (c *mockApiClient) Get() *pagerduty.ListServiceResponse {
 	return &pagerduty.ListServiceResponse{
 		Services: []pagerduty.Service{
 			pagerduty.Service{
@@ -40,7 +40,7 @@ func TestSaveService(t *testing.T) {
 		WithArgs("PK6TEST1", "test-service1").
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
-	client := &MockApiClient{}
+	client := &mockApiClient{}
 	serviceClient := services.Services{Service: client}
 	service := serviceClient.Service.Get()
 	for _, s := range service.Services {

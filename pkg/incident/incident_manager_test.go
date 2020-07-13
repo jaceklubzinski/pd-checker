@@ -7,15 +7,15 @@ import (
 	"github.com/magiconair/properties/assert"
 )
 
-type MockApiClient struct{}
+type mockApiClient struct{}
 
-type MockIncidentClient interface {
+type mockIncidentClient interface {
 	ListIncidents(Options pagerduty.ListIncidentsOptions) *pagerduty.ListIncidentsResponse
 	IncidentAlerts(id string) *pagerduty.ListAlertsResponse
 	CreateIncident(Options *pagerduty.CreateIncidentOptions) error
 }
 
-func (c *MockApiClient) ListIncidents(Options pagerduty.ListIncidentsOptions) *pagerduty.ListIncidentsResponse {
+func (c *mockApiClient) ListIncidents(Options pagerduty.ListIncidentsOptions) *pagerduty.ListIncidentsResponse {
 	return &pagerduty.ListIncidentsResponse{
 		Incidents: []pagerduty.Incident{
 			pagerduty.Incident{
@@ -25,11 +25,11 @@ func (c *MockApiClient) ListIncidents(Options pagerduty.ListIncidentsOptions) *p
 	}
 }
 
-func (c *MockApiClient) CreateIncident(Options *pagerduty.CreateIncidentOptions) error {
+func (c *mockApiClient) CreateIncident(Options *pagerduty.CreateIncidentOptions) error {
 	return nil
 }
 
-func (c *MockApiClient) IncidentAlerts(id string) *pagerduty.ListAlertsResponse {
+func (c *mockApiClient) IncidentAlerts(id string) *pagerduty.ListAlertsResponse {
 	return &pagerduty.ListAlertsResponse{
 		Alerts: []pagerduty.IncidentAlert{
 			pagerduty.IncidentAlert{
@@ -42,7 +42,7 @@ func (c *MockApiClient) IncidentAlerts(id string) *pagerduty.ListAlertsResponse 
 }
 
 func TestCheckForNew(t *testing.T) {
-	client := &MockApiClient{}
+	client := &mockApiClient{}
 	incidents := Manager{IncidentClient: client}
 	if i := incidents.CheckForNew(); i != nil {
 		assert.Equal(t, i.Title, "PD CHECKER - OK")
@@ -50,14 +50,14 @@ func TestCheckForNew(t *testing.T) {
 }
 
 func TestAlertDetails(t *testing.T) {
-	client := &MockApiClient{}
+	client := &mockApiClient{}
 	incidents := Manager{IncidentClient: client}
 	repeatTimer := incidents.AlertDetails("id")
 	assert.Equal(t, repeatTimer, "1s")
 }
 
 func TestTriggerAlert(t *testing.T) {
-	client := &MockApiClient{}
+	client := &mockApiClient{}
 	i := Manager{
 		IncidentClient: client,
 		Incident: Incident{
@@ -65,11 +65,17 @@ func TestTriggerAlert(t *testing.T) {
 			Trigger: "N",
 		},
 	}
-	i.TriggerAlert()
+	err := i.TriggerAlert()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when triggering new alert", err)
+	}
 	assert.Equal(t, i.Alert, "N")
 	assert.Equal(t, i.Trigger, "Y")
 	i.Trigger = "N"
-	i.TriggerAlert()
+	err = i.TriggerAlert()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when triggering alert", err)
+	}
 	assert.Equal(t, i.Alert, "N")
 	assert.Equal(t, i.Trigger, "N")
 }

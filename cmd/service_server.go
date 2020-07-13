@@ -53,13 +53,16 @@ var serviceServerCmd = &cobra.Command{
 					incidents.Options.ServiceIDs = []string{s.ID}
 					if i := incidents.CheckForNew(); i != nil {
 						repeatTimer := incidents.AlertDetails(i.Id)
-						DbRepository.SaveIncident(i, repeatTimer)
+						err = DbRepository.SaveIncident(i, repeatTimer)
+						base.CheckErr(err)
 					}
 				}
 				dbincident, err := DbRepository.GetIncident()
+				base.CheckErr(err)
 				for _, inc := range dbincident {
 					incidents.Incident = *inc
-					incidents.MarkToCheck()
+					err = incidents.MarkToCheck()
+					base.CheckErr(err)
 					if incidents.ToCheck == "Y" {
 						incidents.SetOptionsFromIncident()
 						if i := incidents.CheckForNew(); i != nil {
@@ -67,7 +70,14 @@ var serviceServerCmd = &cobra.Command{
 							incidents.ToCheck = "N"
 							incidents.Trigger = "N"
 							incidents.Alert = "N"
-							DbRepository.UpdateIncident(i, repeatTimer)
+							err = DbRepository.UpdateIncident(i, repeatTimer)
+							if err != nil {
+								log.WithFields(log.Fields{
+									"ServiceName": inc.ServiceName,
+									"ServiceID":   inc.ServiceID,
+									"Error":       err,
+								}).Errorln("Incident sqlite record can't be updated")
+							}
 						}
 						incidents.SetAlertState()
 						err = incidents.TriggerAlert()
@@ -76,9 +86,16 @@ var serviceServerCmd = &cobra.Command{
 								"ServiceName": inc.ServiceName,
 								"ServiceID":   inc.ServiceID,
 								"Error":       err,
-							}).Errorln("New Incident can't be created")
+							}).Errorln("New Incident can't be triggered in PD")
 						}
-						DbRepository.UpdateIncidentState(&incidents.Incident)
+						err = DbRepository.UpdateIncidentState(&incidents.Incident)
+						if err != nil {
+							log.WithFields(log.Fields{
+								"ServiceName": inc.ServiceName,
+								"ServiceID":   inc.ServiceID,
+								"Error":       err,
+							}).Errorln("Incident sqlite record state can't be updated")
+						}
 					}
 				}
 				log.WithFields(log.Fields{
