@@ -31,7 +31,7 @@ func StringToDate(value string) time.Time {
 
 //LastTillNowDuration duration from start to now
 func LastTillNowDuration(start string) time.Duration {
-	return time.Now().Sub(StringToDate(start))
+	return time.Since(StringToDate(start))
 }
 
 //AddDurationToDate add duration to start date

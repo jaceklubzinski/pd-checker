@@ -4,10 +4,11 @@ import (
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	log "github.com/sirupsen/logrus"
 )
 
 //Server prometheus metrics server
-func Server() {
+func Server(port string) {
 	http.Handle("/metrics", promhttp.Handler())
-	http.ListenAndServe(":2112", nil)
+	log.Info(http.ListenAndServe(":"+port, nil))
 }

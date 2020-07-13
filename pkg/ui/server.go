@@ -3,11 +3,13 @@ package ui
 import (
 	"html/template"
 	"net/http"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func (s Server) Listen() {
 	http.HandleFunc("/incidents", s.incident)
-	http.ListenAndServe(":9090", nil)
+	log.Info(http.ListenAndServe(":9090", nil))
 }
 
 func (s Server) incident(w http.ResponseWriter, req *http.Request) {

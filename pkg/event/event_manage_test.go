@@ -39,5 +39,4 @@ func TestManageIncident(t *testing.T) {
 	assert.Equal(t, clientEvent.Response.Status, "success")
 	assert.Equal(t, clientEvent.Options.Payload.Details, "24h")
 	assert.Equal(t, clientEvent.Options.Action, "resolve")
-
 }
