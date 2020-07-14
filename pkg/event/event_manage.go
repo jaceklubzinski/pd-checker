@@ -1,7 +1,6 @@
 package event
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/PagerDuty/go-pagerduty"
@@ -16,8 +15,7 @@ func (e *Event) Trigger() error {
 	var retryAttempt uint = 5
 	err := retry.Do(
 		func() error {
-			fmt.Println(e.Options)
-			resp, err := e.manager.ManageEvent(e.Options)
+			resp, err := e.Manager.ManageEvent()
 			if err != nil {
 				return err
 			}

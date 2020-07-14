@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/PagerDuty/go-pagerduty"
+	"github.com/jaceklubzinski/pd-checker/pkg/client"
 	"github.com/jaceklubzinski/pd-checker/pkg/event"
 	"github.com/jaceklubzinski/pd-checker/pkg/metrics"
 	log "github.com/sirupsen/logrus"
@@ -25,7 +26,8 @@ Metrics are available on url 127.0.0.1:2112/metrics`,
 		integrationKey := viper.GetString("pagerduty_integration_key")
 		triggerEvery, _ := cmd.Flags().GetDuration("repeat")
 		opts.RoutingKey = integrationKey
-		clientEvent := event.NewEvent(&opts)
+		pdclient := client.NewEventClient(&opts)
+		clientEvent := event.Event{Options: &opts, Manager: pdclient}
 		clientEvent.NewRecordMetricsEvent()
 		clientEvent.SetPayLoad(triggerEvery.String())
 		log.WithFields(log.Fields{

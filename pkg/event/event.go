@@ -10,7 +10,7 @@ import (
 type Event struct {
 	Options  *pagerduty.V2Event
 	Response *pagerduty.V2EventResponse
-	manager  client.Manager
+	Manager  client.Manager
 	message  string
 	metrics.RecordMetricsEvent
 }
