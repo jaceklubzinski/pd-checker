@@ -109,6 +109,6 @@ var serviceServerCmd = &cobra.Command{
 
 func init() {
 	serviceCmd.AddCommand(serviceServerCmd)
-	defaultRepeatService := 60 * time.Second
+	defaultRepeatService := 6 * time.Hour
 	serviceServerCmd.Flags().DurationP("check-repeat", "t", defaultRepeatService, "Check for new new alert every duration minutes")
 }

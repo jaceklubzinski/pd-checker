@@ -50,6 +50,6 @@ Metrics are available on url 127.0.0.1:2112/metrics`,
 
 func init() {
 	eventCmd.AddCommand(eventServerCmd)
-	defaultRepeat := 60 * time.Second
+	defaultRepeat := 12 * time.Hour
 	eventServerCmd.Flags().DurationP("repeat", "r", defaultRepeat, "Trigger new alert every duration minutes")
 }

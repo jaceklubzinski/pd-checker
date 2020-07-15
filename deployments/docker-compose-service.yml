@@ -1,0 +1,7 @@
+version: '2.0'
+services:
+  pd-checker-service:
+    image: pd-checker2
+    command: service server
+    environment:
+      PAGERDUTY_AUTH_TOKEN:
