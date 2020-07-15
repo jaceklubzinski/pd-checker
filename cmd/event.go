@@ -26,9 +26,6 @@ to quickly create a Cobra application.`,
 
 func init() {
 	rootCmd.AddCommand(eventCmd)
-	err := viper.BindEnv("pagerduty_integration_key")
-	if err != nil {
-		log.Print(err)
-	}
-	eventCmd.Flags().StringP("integration-key", "i", viper.GetString("PAGERDUTY_INTEGRATION_KEY"), "Integration key for PagerDuty event api (env PAGERDUTY_INTEGRATION_KEY)")
+	viper.AutomaticEnv()
+	eventCmd.Flags().StringP("pagerduty_integration_key", "i", "", "Integration key for PagerDuty event api (env PAGERDUTY_INTEGRATION_KEY)")
 }
