@@ -20,5 +20,4 @@ var serviceCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(serviceCmd)
 	viper.AutomaticEnv()
-	serviceCmd.PersistentFlags().String("pagerduty_auth_token", "", "Set your PagerDuty auth Token")
 }

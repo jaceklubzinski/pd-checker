@@ -15,6 +15,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // serverCmd represents the server command
@@ -24,6 +25,7 @@ var serviceServerCmd = &cobra.Command{
 	Long:  "Check for new Pagerduty event in a server mode and generate status page",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("server called")
+		pagerDutyAuthToken := viper.GetString("pagerduty_auth_token")
 		databasePath, err := cmd.Flags().GetString("database-path")
 		base.CheckErr(err)
 		checkEvery, _ := cmd.Flags().GetDuration("check-repeat")
@@ -34,7 +36,7 @@ var serviceServerCmd = &cobra.Command{
 		DbRepository := database.NewIncidentRepository(db)
 		DbRepository.InitIncidentRepository()
 		server := ui.NewServer(DbRepository)
-		pdclient := pagerduty.NewClient(getFlagAuthToken())
+		pdclient := pagerduty.NewClient(pagerDutyAuthToken)
 		conn := client.NewApiClient(pdclient)
 		incidents := incident.Manager{IncidentClient: conn}
 		serviceClient := services.Services{Service: conn}
