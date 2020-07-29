@@ -1,7 +1,7 @@
 version: '2.0'
 services:
   pd-checker-event:
-    image: pd-checker2
+    image: jlubzinski/pd-checker:v0.0.1 
     command: event server
     environment:
       PAGERDUTY_INTEGRATION_KEY:

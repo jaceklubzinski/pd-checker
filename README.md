@@ -1,15 +1,36 @@
-# Architecure overview
+- [Architecture overview](#architecture-overview)
+- [pd-checker service](#pd-checker-service)
+	- [Description](#description)
+	- [Database structure](#database-structure)
+	- [Usage](#usage)
+		- [CLI](#cli)
+		- [Docker](#docker)
+	- [Metrics](#metrics)
+- [pd-checker event](#pd-checker-event)
+	- [Description](#description-1)
+	- [Usage](#usage-1)
+		- [CLI](#cli-1)
+		- [Docker](#docker-1)
+	- [Metrics](#metrics-1)
+- [FAQ](#faq)
+	- [New PagerDuty service was added how to refresh pd-checker service database](#new-pagerduty-service-was-added-how-to-refresh-pd-checker-service-database)
+	- [pd-checker service container service was recreated and sqlite database was lost](#pd-checker-service-container-service-was-recreated-and-sqlite-database-was-lost)
+	- [How often pd-checker service will be trigger PagerDuty alert on not working integration](#how-often-pd-checker-service-will-be-trigger-pagerduty-alert-on-not-working-integration)
+	- [How add PagerDuty service to pd-checker](#how-add-pagerduty-service-to-pd-checker)
+# Architecture overview
 ![Diagram](doc/images/pd-checker.png)
 
-#pd-checker-service
+# pd-checker service
+## Description
+`pd-checker service` is a master process that run on your monitoring infrastructure (outside of the monitored infrastructure).
+Main purpose of this command is to scanning all PagerDuty services for a specific pd-checker event (automatically resolved) and trigger alert if such incident not occurred after defined time. 
 
-- Get all services from PagerDuty and save them to sqlite database (services table)
-- Check pd-checker event for services that don't have yet any event and save them to sqlite database (incidents table)
-- Get all incidents from sqlite database
-- Mark incident to check if created time is bigger than defined `triggerEvery` for this incident
+`pd-checker service` to integrate with PagerDuty required [user auth token](https://support.pagerduty.com/docs/generating-api-keys#section-rest-api-keys).
 
-### Database structure
-`pd-checker-service` lists incidents for all available services and save to the database the last incident per service created by the `pd-checker-event`.
+Can be used as [cli](#cli) command or [docker](#docker) service
+
+## Database structure
+`pd-checker service` lists incidents for all available services and save to the database last incident per service created by the `pd-checker event`.
 If incident for given service already exist it will only update `ID`, `Title`, `CreateAt` and `Timer` values. 
 ```
 //Incident structure for incidents stored in database
@@ -35,11 +56,41 @@ type Service struct {
 }
 ```
 
-# pd-checker-event
-## Description
-Main idea behind this program is to test _PagerDuty_ integration on your infrastracture.
+## Usage
+### CLI
+Set PagerDuty user auth token using environment variable 
+```
+	export PAGERDUTY_AUTH_TOKEN=xxx
+```
 
-pd-checker-event trigger (from inside of your infrastracture) and instantly resolve single Pagerduty incident always with the same options:
+
+Run pd-checker service with default parameters (check all services for new alerts every 6h)
+```
+pd-checker service server
+```
+
+
+Run pd-checker service for every 24h for scanning services and checking new alerts
+```
+pd-checker service server -t 24h
+```
+### Docker
+Can be used as docker service (preferred way)
+Pull image from docker hub
+```
+docker pull jlubzinski/pd-checker
+```
+
+Prepare [docker compose](deployments/docker-compose-service.yml) and define `PAGERDUTY_AUTH_TOKEN` 
+## Metrics
+
+# pd-checker event
+## Description
+Main idea behind this program is to test _PagerDuty_ integration on your infrastructure.
+
+`pd-checker event` to integrate with PagerDuty required [Events API v2 service integration](https://support.pagerduty.com/docs/services-and-integrations#events-api-v2).
+
+`pd-checker-event` trigger (from inside of your infrastructure) and instantly resolve single Pagerduty incident always with the same options:
 ```
 Summary:  "PD CHECKER - OK",
 Severity: "info",
@@ -52,5 +103,38 @@ Next pd-checker-service will scan all available services every _triggerEvery_ ti
 
 
 ## Usage
-Integration key _Events API v2_
-test
+### CLI
+Set PagerDuty integration key using environment variable 
+```
+	export PAGERDUTY_INTEGRATION_KEY=xxx
+```
+
+
+Run `pd-checker event` with default parameters (trigger/resolve new alert every 12h )
+```
+pd-checker event server
+```
+
+
+Run `pd-checker event` trigger/resolve new alert every 12h
+```
+pd-checker service event -r 12h
+```
+### Docker
+Can be used as docker service (preferred way)
+Pull image from docker hub
+```
+docker pull jlubzinski/pd-checker
+```
+
+Prepare [docker compose](deployments/docker-compose-event.yml) and define `PAGERDUTY_INTEGRATION_KEY` 
+## Metrics
+# FAQ
+## New PagerDuty service was added how to refresh pd-checker service database
+`pd-checker service` on every 12h (default) scan for new PagerDuty service and add them to sqlite database
+## pd-checker service container service was recreated and sqlite database was lost
+`pd-checker service` on initial run scan for all PagerDuty services and add them to sqlite database
+## How often pd-checker service will be trigger PagerDuty alert on not working integration
+`pd-checker service` trigger real PagerDuty alert only once and keep information about triggered alerts in sqlite database
+## How add PagerDuty service to pd-checker
+Add `pd-checker event` to new monitored infrastructure. Next every 12h (default) new pd-checker event will be created. `pd-checker service` add new service after scan new alert
