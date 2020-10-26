@@ -1,6 +1,7 @@
 ![Go](https://github.com/jaceklubzinski/pd-checker/workflows/Go/badge.svg?branch=master)
 ![golangci-lint](https://github.com/jaceklubzinski/pd-checker/workflows/golangci-lint/badge.svg?branch=master)
 ![security scan](https://github.com/jaceklubzinski/pd-checker/workflows/security%20scan/badge.svg?branch=master)
+![gosec](https://github.com/jaceklubzinski/pd-checker/workflows/Gosec/badge.svg?branch=master)
 ![docker build](https://github.com/jaceklubzinski/pd-checker/workflows/docker%20build/badge.svg?branch=v0.0.1)
 
 - [Architecture overview](#architecture-overview)
