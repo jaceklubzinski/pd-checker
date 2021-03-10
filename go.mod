@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/DATA-DOG/go-sqlmock v1.4.1
 	github.com/PagerDuty/go-pagerduty v1.1.2
-	github.com/avast/retry-go v2.6.0+incompatible
+	github.com/avast/retry-go v2.7.0+incompatible
 	github.com/grpc-ecosystem/grpc-gateway v1.14.1 // indirect
 	github.com/magiconair/properties v1.8.1
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
