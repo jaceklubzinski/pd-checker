@@ -7,7 +7,7 @@ require (
 	github.com/PagerDuty/go-pagerduty v1.1.2
 	github.com/avast/retry-go v2.7.0+incompatible
 	github.com/grpc-ecosystem/grpc-gateway v1.14.1 // indirect
-	github.com/magiconair/properties v1.8.1
+	github.com/magiconair/properties v1.8.4
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/prometheus/client_golang v1.5.0
 	github.com/sirupsen/logrus v1.4.2
