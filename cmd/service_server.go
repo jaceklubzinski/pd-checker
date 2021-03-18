@@ -44,8 +44,8 @@ var serviceServerCmd = &cobra.Command{
 		go func() {
 			for ; true; <-ticker.C {
 				service := serviceClient.Service.Get()
-				for _, s := range service.Services {
-					err := DbRepository.SaveService(&s)
+				for i := range service.Services {
+					err := DbRepository.SaveService(&service.Services[i])
 					base.CheckErr(err)
 				}
 				dbservice, err := DbRepository.GetService()
