@@ -12,6 +12,5 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
-	github.com/stretchr/testify v1.8.2
-	github.com/urfave/cli/v2 v2.1.1 // indirect
+	github.com/stretchr/testify v1.8.3
 )
