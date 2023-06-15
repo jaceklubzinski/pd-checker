@@ -8,10 +8,9 @@ require (
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/magiconair/properties v1.8.7
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
-	github.com/prometheus/client_golang v1.14.0
+	github.com/prometheus/client_golang v1.16.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.2
-	github.com/urfave/cli/v2 v2.1.1 // indirect
 )
